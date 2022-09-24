@@ -1,0 +1,18 @@
+"addFriend",
+"endRound",
+"gameLobbyQuit",
+"getRtcToken",
+"handlePartnersTransaction",
+"onPartnerMatchmaking",
+"onSelectedTeamMatchmaking",
+"onTeamMatchmaking",
+playCard, POST
+registerUser, POST
+"removeExpiredMatches",
+"removeExpiredPartnerMatches",
+"sendFriendsRequest",
+"sendPartnersRequest",
+"signUp",
+"teamMatchmakingRedirect",
+"updateGameReadyCount",
+"updateLobbyReadyCount",
