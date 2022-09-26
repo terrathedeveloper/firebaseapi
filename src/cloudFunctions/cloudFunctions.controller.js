@@ -72,7 +72,11 @@ async function playCard(req, res) {
   res.status(200).send('Template successful')
 }
 async function registerUser(req, res) {
-  res.status(200).send('Template successful')
+  let user = {username: req.body.username,email: req.body.email, password: req.body.password, emailVerified: true,
+    disabled: false}
+  const result = await service.createNewUser(user)
+
+  res.status(200).json(result)
 }
 async function removeExpiredMatches(req, res) {
   res.status(200).send('Template successful')
