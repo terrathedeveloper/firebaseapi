@@ -8,14 +8,18 @@ const {
   setDoc,
   doc,
 } = require("firebase/firestore");
-const { getAuth, createUserWithEmailAndPassword, createUser }= require("firebase/auth");
+const {
+  getAuth,
+  createUserWithEmailAndPassword,
+  createUser,
+} = require("firebase/auth");
 var admin = require("firebase-admin");
 
 var serviceAccount = require("../../thebigjokerprod-firebase-adminsdk-7o9u8-ab68508be0.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://thebigjokerprod-default-rtdb.firebaseio.com"
+  databaseURL: "https://thebigjokerprod-default-rtdb.firebaseio.com",
 });
 const { getDatabase, ref, set } = require("firebase/database");
 const firebaseConfig = {
@@ -32,16 +36,6 @@ const app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
 const database = getDatabase(app);
 
-function getSearchCases(username) {
-  let list = [];
-  let tmp = "";
-  for (let i = 0; i < username.length; i++) {
-    tmp = tmp.toLowerCase() + username[i].toLowerCase();
-    list.push(tmp);
-  }
-  return list;
-}
-
 async function createNewUser(userData) {
   let initUser = {
     avatarColorIndex: 0,
@@ -56,21 +50,27 @@ async function createNewUser(userData) {
     muteMic: false,
     partner: null,
     photoUrl: null,
-    searchCases: getSearchCases(userData.username),
+    searchCases: userData.searchCases,
   };
   try {
     let newUser = await admin.auth().createUser(userData);
-    console.log("newUSer",newUser)
+    console.log("newUSer", newUser);
     let token = await admin.auth().createCustomToken(newUser.uid);
-    let {uid, email} = newUser
-    const user = {uid, token, email, username: userData.username,...initUser};
-    await setDoc(doc(firestore,"users", user.username),user);
-    return {userCreated:true};
+    let { uid, email } = newUser;
+    const user = {
+      uid,
+      token,
+      email,
+      username: userData.username,
+      ...initUser,
+    };
+    await setDoc(doc(firestore, "users", user.username), user);
+    return { userCreated: true };
   } catch (e) {
-    return {e:e.message, message:'Error creating user'}
+    return { e: e.message, message: "Error creating user" };
   }
 }
 
 module.exports = {
-  createNewUser
+  createNewUser,
 };
