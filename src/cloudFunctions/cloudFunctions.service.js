@@ -54,7 +54,6 @@ async function createNewUser(userData) {
   };
   try {
     let newUser = await admin.auth().createUser(userData);
-    console.log("newUSer", newUser);
     let token = await admin.auth().createCustomToken(newUser.uid);
     let { uid, email } = newUser;
     const user = {
