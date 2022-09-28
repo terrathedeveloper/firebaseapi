@@ -77,11 +77,11 @@ async function signInUser(email, password){
   let user = null;
   try{
     const userCred = await signInWithEmailAndPassword(auth, email, password);
-    if(userCred){
+   /* if(userCred){
       const allUsersQuery = query(collection(firestore,"users"), where("email","==",email));
       const snapshots = await getDocs(allUsersQuery);
       user = snapshots.docs[0].data();
-    }
+    }*/
     return user
   } catch(e){
     return {e:e.message, message: "Error with signing in user"}
