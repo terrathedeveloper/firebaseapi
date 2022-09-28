@@ -23,6 +23,7 @@ router.route("/removeExpiredPartnerMatches").get(controller.removeExpiredPartner
 router.route("/sendFriendsRequest").get(controller.sendFriendsRequest).all(notAllowed)
 router.route("/sendPartnersRequest").get(controller.sendPartnersRequest).all(notAllowed)
 router.route("/signInUser").post(controller.signInUser).all(notAllowed)
+router.route("/signOutUser").post(controller.signOutUser).all(notAllowed)
 router.route("/teamMatchmakingRedirect").get(controller.teamMatchmakingRedirect).all(notAllowed)
 router.route("/updateGameReadyCount").get(controller.updateGameReadyCount).all(notAllowed)
 router.route("/updateLobbyReadyCount").get(controller.updateLobbyReadyCount).all(notAllowed)

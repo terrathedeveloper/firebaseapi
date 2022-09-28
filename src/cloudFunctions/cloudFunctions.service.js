@@ -12,7 +12,7 @@ const {
 const {
   getAuth,
   createUserWithEmailAndPassword,
-  createUser,
+  createUser,signOut,
   signInWithEmailAndPassword,
 } = require("firebase/auth");
 var admin = require("firebase-admin");
@@ -73,22 +73,31 @@ async function createNewUser(userData) {
 }
 
 async function signInUser(email, password){
-  const auth = getAuth();
+  //const auth = getAuth();
   let user = null;
   try{
-    const userCred = await signInWithEmailAndPassword(auth, email, password);
-    if(userCred){
+ //   const userCred = await signInWithEmailAndPassword(auth, email, password);
+  //  if(userCred){
       const allUsersQuery = query(collection(firestore,"users"), where("email","==",email));
       const snapshots = await getDocs(allUsersQuery);
       user = snapshots.docs[0].data();
-    }
-    return {user}
+   // }
+    return user
   } catch(e){
     return {e:e.message, message: "Error with signing in user"}
   }
 }
-
+async function signOutUser(){
+  const auth = getAuth();
+  console.log("auth",auth)
+  try {
+     await signOut(auth);
+  } catch (error) {
+   console.log("SIGN OUT ERRIR", error)
+  }
+}
 module.exports = {
   createNewUser,
-  signInUser
+  signInUser, 
+  signOutUser
 };

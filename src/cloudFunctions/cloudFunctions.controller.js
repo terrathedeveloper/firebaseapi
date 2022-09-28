@@ -96,6 +96,11 @@ async function signInUser(req, res) {
   const result = await service.signInUser(email, password);
   res.status(200).json(result)
 }
+
+async function signOutUser(req, res) {
+  const result = await service.signOutUser();
+  res.status(200).json(result)
+}
 async function teamMatchmakingRedirect(req, res) {
   res.status(200).send('Template successful')
 }
@@ -122,6 +127,7 @@ module.exports = {
   sendFriendsRequest,
   sendPartnersRequest,
   signInUser,
+  signOutUser,
   teamMatchmakingRedirect,
   updateGameReadyCount,
   updateLobbyReadyCount
