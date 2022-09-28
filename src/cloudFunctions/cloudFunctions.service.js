@@ -5,6 +5,7 @@ const {
   query,
   where,
   getDocs,
+  getDoc,
   setDoc,
   doc,
 } = require("firebase/firestore");
@@ -73,9 +74,15 @@ async function createNewUser(userData) {
 
 async function signInUser(email, password){
   const auth = getAuth();
+  let user = null;
   try{
     const userCred = await signInWithEmailAndPassword(auth, email, password);
-    return {user:userCred}
+    if(userCred){
+      const allUsersQuery = query(collection(firestore,"users"), where("email","==",email));
+      const snapshots = await getDocs(allUsersQuery);
+      user = snapshots.docs[0].data();
+    }
+    return {user}
   } catch(e){
     return {e:e.message, message: "Error with signing in user"}
   }
