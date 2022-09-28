@@ -12,6 +12,7 @@ const {
   getAuth,
   createUserWithEmailAndPassword,
   createUser,
+  signInWithEmailAndPassword,
 } = require("firebase/auth");
 var admin = require("firebase-admin");
 
@@ -70,6 +71,17 @@ async function createNewUser(userData) {
   }
 }
 
+async function signInUser(email, password){
+  const auth = getAuth();
+  try{
+    const userCred = await signInWithEmailAndPassword(auth, email, password);
+    return {user:userCred}
+  } catch(e){
+    return {e:e.message, message: "Error with signing in user"}
+  }
+}
+
 module.exports = {
   createNewUser,
+  signInUser
 };

@@ -90,8 +90,11 @@ async function sendFriendsRequest(req, res) {
 async function sendPartnersRequest(req, res) {
   res.status(200).send('Template successful')
 }
-async function signUp(req, res) {
-  res.status(200).send('Template successful')
+async function signInUser(req, res) {
+  const {email, password}=req.body;
+  console.log('signin',email, password)
+  const result = await service.signInUser(email, password);
+  res.status(200).json(result)
 }
 async function teamMatchmakingRedirect(req, res) {
   res.status(200).send('Template successful')
@@ -118,7 +121,7 @@ module.exports = {
   removeExpiredPartnerMatches,
   sendFriendsRequest,
   sendPartnersRequest,
-  signUp,
+  signInUser,
   teamMatchmakingRedirect,
   updateGameReadyCount,
   updateLobbyReadyCount
