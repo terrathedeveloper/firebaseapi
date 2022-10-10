@@ -8,6 +8,8 @@ const {
   getDoc,
   setDoc,
   doc,
+  Firestore,
+  serverTimestamp
 } = require("firebase/firestore");
 const {
   getAuth,
@@ -72,6 +74,18 @@ async function createNewUser(userData) {
   }
 }
 
+async function joinPartnerQueue(username){
+  try{
+   const result = await setDoc(doc(firestore, "partners_matchmaking", username), {
+    player: username,
+    timestamp: serverTimestamp(),
+  });
+   return {addedToQueue:true}
+  }catch(e){
+    return { e: e.message, message: "Error joining partner queue" };
+  }
+}
+
 async function signInUser(email, password){
   const auth = getAuth();
   let user = null;
@@ -99,5 +113,6 @@ async function signOutUser(){
 module.exports = {
   createNewUser,
   signInUser, 
-  signOutUser
+  signOutUser, 
+  joinPartnerQueue
 };

@@ -60,7 +60,9 @@ async function handlePartnersTransaction(req, res) {
   res.status(200).send('Template successful')
 }
 async function onPartnerMatchmaking(req, res) {
-  res.status(200).send('Template successful')
+  let user = req.query.user;
+  const result = await service.joinPartnerQueue(user);
+  res.status(200).send(result)
 }
 async function onSelectedTeamMatchmaking(req, res) {
   res.status(200).send('Template successful')
