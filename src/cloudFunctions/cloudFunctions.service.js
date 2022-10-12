@@ -41,7 +41,7 @@ const app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
 const database = getDatabase(app);
 
-async function createNewUser(userData) {
+async function createNewUser(userData, phoneNumber) {
   let initUser = {
     avatarColorIndex: 0,
     awaitingPartner: false,
@@ -59,14 +59,15 @@ async function createNewUser(userData) {
   };
   try {
     let newUser = await admin.auth().createUser(userData);
+    console.log("newuser",newUser)
     let token = await admin.auth().createCustomToken(newUser.uid);
     let { uid, email } = newUser;
     const user = {
       uid,
       token,
       email,
+      phoneNumber,
       username: userData.username,
-      phone:userData.phoneNumber,
       ...initUser,
     };
     await setDoc(doc(firestore, "users", user.username), user);

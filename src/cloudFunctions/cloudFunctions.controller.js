@@ -78,9 +78,12 @@ async function playCard(req, res) {
   res.status(200).send('Template successful')
 }
 async function registerUser(req, res) {
-  let user = {username: req.body.username,email: req.body.email, password: req.body.password, emailVerified: true,
-    disabled: false, searchCases: req.body.searchCases, phoneNumber: req.body.phoneNumber}
-  const result = await service.createNewUser(user)
+  console.log('here we are');
+  console.log(req.body)
+  let user = {username: req.body.username,email: req.body.email, password: req.body.password.toString(), emailVerified: true,
+    disabled: false, searchCases: req.body.searchCases}
+    console.log(user);
+  const result = await service.createNewUser(user,req.body.phoneNumber)
 
   res.status(200).json(result)
 }
