@@ -79,7 +79,7 @@ async function playCard(req, res) {
 }
 async function registerUser(req, res) {
   let user = {username: req.body.username,email: req.body.email, password: req.body.password, emailVerified: true,
-    disabled: false, searchCases: req.body.searchCases}
+    disabled: false, searchCases: req.body.searchCases, phoneNumber: req.body.phoneNumber}
   const result = await service.createNewUser(user)
 
   res.status(200).json(result)
