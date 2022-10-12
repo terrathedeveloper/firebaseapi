@@ -150,8 +150,11 @@ async function createTeam(user,partner){
     await runTransaction(firestore, async (transaction)=>{
       await deleteDoc(doc(firestore,"partners_matchmaking",user))
       await deleteDoc(doc(firestore,"partners_matchmaking",partner))
+      const userRef = doc(firestore, "users", user);
+      const partnerRef = doc(firestore, "users", partner);
       let userDoc = await getDoc(doc(firestore, "users", user))
       let partnerDoc = await getDoc(doc(firestore, "users", partner))
+      
       userDoc =userDoc.data()
       partnerDoc =partnerDoc.data()
       console.log(userDoc.friends)
@@ -207,6 +210,9 @@ async function createTeam(user,partner){
         inMatch:false,
         matchmkingWith:null
       });
+      transaction.update(userRef,{partner:partner})
+      transaction.update(partnerRef,{partner:user})
+
     })
   } catch (e) {
     return {e:e.message, message: "Error with partner request"}
