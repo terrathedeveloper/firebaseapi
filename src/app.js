@@ -13,7 +13,7 @@ const cloudFunctionsRouter = require("./cloudFunctions/cloudFunctions.router")
 
 const app = express();
 
-app.use(logger);
+//app.use(logger);
 // app.use(cors());
 app.use(express.json());
 

@@ -12,7 +12,7 @@ router.route("/addFriend").get(controller.addFriend).all(notAllowed);
 router.route("/endRound").get(controller.endRound).all(notAllowed);
 router.route("/gameLobbyQuit").get(controller.gameLobbyQuit).all(notAllowed);
 router.route("/getRtcToken").get(controller.getRtcToken).all(notAllowed);
-router.route("/handlePartnersTransaction").get(controller.handlePartnersTransaction).all(notAllowed)
+router.route("/handlePartnersTransaction").post(controller.handlePartnersTransaction).all(notAllowed)
 router.route("/onPartnerMatchmaking").get(controller.onPartnerMatchmaking).all(notAllowed)
 router.route("/onSelectedTeamMatchmaking").get(controller.onSelectedTeamMatchmaking).all(notAllowed)
 router.route("/onTeamMatchmaking").get(controller.onTeamMatchmaking).all(notAllowed)

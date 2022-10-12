@@ -7,8 +7,9 @@ const {
   getDocs,
   getDoc,
   setDoc,
+  deleteDoc,
   doc,
-  Firestore,
+  runTransaction,
   serverTimestamp
 } = require("firebase/firestore");
 const {
@@ -65,6 +66,7 @@ async function createNewUser(userData) {
       token,
       email,
       username: userData.username,
+      phone:userData.phoneNumber,
       ...initUser,
     };
     await setDoc(doc(firestore, "users", user.username), user);
@@ -110,9 +112,110 @@ async function signOutUser(){
    console.log("SIGN OUT ERRIR", error)
   }
 }
+
+async function sendPartnerInvite(token, username, type){
+  const payload = {
+    data: {
+      click_action: "FLUTTER_NOTIFICATION_CLICK",
+      notificationType: "partnersRequest",
+      fromUsername: username,
+      //fromProfilePic: fromProfilePic,
+     // fromColorIndex: fromColorIndex,
+      type: type,
+    },
+    notification:{
+      title: "Partners Invite",
+      body: `${username} wants to partner up with you!`,
+    }
+  }; 
+  var options = {
+    priority: "high",
+    timeToLive: 60 * 60 * 24,
+  };
+  try{
+    let result = await admin.messaging().sendToDevice(token, payload, options)
+    return result;
+  } catch(e){
+    return {e:e.message, message: "Error with partner request"}
+  }
+
+}
+
+async function createTeam(user,partner){
+  console.log(`${user}+${partner}`)
+  
+  try {
+    //const partnersQuery = query(collection(firestore,"partners_matchmaking"));
+    await runTransaction(firestore, async (transaction)=>{
+      await deleteDoc(doc(firestore,"partners_matchmaking",user))
+      await deleteDoc(doc(firestore,"partners_matchmaking",partner))
+      let userDoc = await getDoc(doc(firestore, "users", user))
+      let partnerDoc = await getDoc(doc(firestore, "users", partner))
+      userDoc =userDoc.data()
+      partnerDoc =partnerDoc.data()
+      console.log(userDoc.friends)
+      userDoc.friends = userDoc.friends? userDoc.friends:[];
+      partnerDoc.friends = partnerDoc.friends? partnerDoc.friends:[];
+      let profilePics =[];
+      let phones=[];
+      let colorIndexes=[];
+      let players = [user,partner].sort();
+      let network = [...new Set([...userDoc.friends, ...partnerDoc.friends])]
+
+      if (players[0] == user) {
+        profilePics = [
+          userDoc.photoUrl,
+          partnerDoc.photoUrl
+        ];
+        phones = [
+          userDoc.phoneNumber,
+          partnerDoc.phoneNumber
+        ];
+        colorIndexes=[
+          userDoc.avatarColorIndex,
+          partnerDoc.avatarColorIndex
+        ];
+      } else {
+        profilePics = [
+          partnerDoc.photoUrl,
+          userDoc.photoUrl
+        ];
+        phones = [
+          partnerDoc.phoneNumber,
+          userDoc.phoneNumber
+        ];
+        colorIndexes=[
+          partnerDoc.avatarColorIndex,
+          userDoc.avatarColorIndex        
+        ];
+      }
+
+      const teamsRef= doc(firestore,"teams",`${players[0]}+${players[1]}`);
+      transaction.set(teamsRef, {
+        id:`${players[0]}+${players[1]}`,
+        players,
+        phones,
+        profilePics,
+        colorIndexes,
+        matchmakingAvailable:true,
+        isMatchmaking:false,
+        leader:user,
+        isOnline:true,
+        network,
+        wins:0,
+        inMatch:false,
+        matchmkingWith:null
+      });
+    })
+  } catch (e) {
+    return {e:e.message, message: "Error with partner request"}
+  }
+}
 module.exports = {
   createNewUser,
   signInUser, 
   signOutUser, 
-  joinPartnerQueue
+  joinPartnerQueue,
+  sendPartnerInvite, 
+  createTeam
 };

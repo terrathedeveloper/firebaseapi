@@ -57,7 +57,11 @@ async function getRtcToken(req, res) {
   res.status(200).send('Template successful')
 }
 async function handlePartnersTransaction(req, res) {
-  res.status(200).send('Template successful')
+  const {user, partner } = req.body;
+ // console.log('MESSAGE',partnerToken, username,type)
+  const result = await service.createTeam(user,partner);
+  //await service.sendPartnerInvite(partnerToken, username, type)
+  res.status(200).send(result)
 }
 async function onPartnerMatchmaking(req, res) {
   let user = req.query.user;
