@@ -11,12 +11,13 @@ const {
   doc,
   runTransaction,
   serverTimestamp,
-  updateDoc
+  updateDoc,
 } = require("firebase/firestore");
 const {
   getAuth,
   createUserWithEmailAndPassword,
-  createUser,signOut,
+  createUser,
+  signOut,
   signInWithEmailAndPassword,
 } = require("firebase/auth");
 var admin = require("firebase-admin");
@@ -60,7 +61,7 @@ async function createNewUser(userData, phoneNumber) {
   };
   try {
     let newUser = await admin.auth().createUser(userData);
-    console.log("newuser",newUser)
+    console.log("newuser", newUser);
     let token = await admin.auth().createCustomToken(newUser.uid);
     let { uid, email } = newUser;
     const user = {
@@ -78,184 +79,210 @@ async function createNewUser(userData, phoneNumber) {
   }
 }
 
-async function joinPartnerQueue(username){
-  try{
-   const result = await setDoc(doc(firestore, "partners_matchmaking", username), {
-    player: username,
-    timestamp: serverTimestamp(),
-  });
-   return {addedToQueue:true}
-  }catch(e){
+async function joinPartnerQueue(username) {
+  try {
+    const result = await setDoc(
+      doc(firestore, "partners_matchmaking", username),
+      {
+        player: username,
+        timestamp: serverTimestamp(),
+      }
+    );
+    return { addedToQueue: true };
+  } catch (e) {
     return { e: e.message, message: "Error joining partner queue" };
   }
 }
 
-async function signInUser(email, password){
+async function signInUser(email, password) {
   const auth = getAuth();
   let user = null;
-  try{
+  try {
     const userCred = await signInWithEmailAndPassword(auth, email, password);
-    if(userCred){
-      const allUsersQuery = query(collection(firestore,"users"), where("email","==",email));
+    if (userCred) {
+      const allUsersQuery = query(
+        collection(firestore, "users"),
+        where("email", "==", email)
+      );
       const snapshots = await getDocs(allUsersQuery);
       user = snapshots.docs[0].data();
     }
-    return user
-  } catch(e){
-    return {e:e.message, message: "Error with signing in user"}
+    return user;
+  } catch (e) {
+    return { e: e.message, message: "Error with signing in user" };
   }
 }
-async function signOutUser(){
+async function signOutUser() {
   const auth = getAuth();
-  console.log("auth",auth)
+  console.log("auth", auth);
   try {
-     await signOut(auth);
+    await signOut(auth);
   } catch (error) {
-   console.log("SIGN OUT ERRIR", error)
+    console.log("SIGN OUT ERRIR", error);
   }
 }
 
-async function sendPartnerInvite(token, username, type){
+async function sendPartnerInvite(token, username, type) {
   const payload = {
     data: {
       click_action: "FLUTTER_NOTIFICATION_CLICK",
       notificationType: "partnersRequest",
       fromUsername: username,
       //fromProfilePic: fromProfilePic,
-     // fromColorIndex: fromColorIndex,
+      // fromColorIndex: fromColorIndex,
       type: type,
     },
-    notification:{
+    notification: {
       title: "Partners Invite",
       body: `${username} wants to partner up with you!`,
-    }
-  }; 
+    },
+  };
   var options = {
     priority: "high",
     timeToLive: 60 * 60 * 24,
   };
-  try{
-    let result = await admin.messaging().sendToDevice(token, payload, options)
+  try {
+    let result = await admin.messaging().sendToDevice(token, payload, options);
     return result;
-  } catch(e){
-    return {e:e.message, message: "Error with partner request"}
+  } catch (e) {
+    return { e: e.message, message: "Error with partner request" };
   }
-
 }
 
-async function createTeam(user,partner){
-  console.log(`${user}+${partner}`)
-  
+async function createTeam(user, partner) {
+  console.log(`${user}+${partner}`);
+
   try {
     //const partnersQuery = query(collection(firestore,"partners_matchmaking"));
-    await runTransaction(firestore, async (transaction)=>{
-      await deleteDoc(doc(firestore,"partners_matchmaking",user))
-      await deleteDoc(doc(firestore,"partners_matchmaking",partner))
+    await runTransaction(firestore, async (transaction) => {
+      await deleteDoc(doc(firestore, "partners_matchmaking", user));
+      await deleteDoc(doc(firestore, "partners_matchmaking", partner));
       const userRef = doc(firestore, "users", user);
       const partnerRef = doc(firestore, "users", partner);
-      let userDoc = await getDoc(doc(firestore, "users", user))
-      let partnerDoc = await getDoc(doc(firestore, "users", partner))
-      
-      userDoc =userDoc.data()
-      partnerDoc =partnerDoc.data()
-      console.log(userDoc.friends)
-      userDoc.friends = userDoc.friends? userDoc.friends:[];
-      partnerDoc.friends = partnerDoc.friends? partnerDoc.friends:[];
-      let profilePics =[];
-      let phones=[];
-      let colorIndexes=[];
-      let players = [user,partner].sort();
-      let network = [...new Set([...userDoc.friends, ...partnerDoc.friends])]
+      let userDoc = await getDoc(doc(firestore, "users", user));
+      let partnerDoc = await getDoc(doc(firestore, "users", partner));
+
+      userDoc = userDoc.data();
+      partnerDoc = partnerDoc.data();
+      console.log(userDoc.friends);
+      userDoc.friends = userDoc.friends ? userDoc.friends : [];
+      partnerDoc.friends = partnerDoc.friends ? partnerDoc.friends : [];
+      let profilePics = [];
+      let phones = [];
+      let colorIndexes = [];
+      let players = [user, partner].sort();
+      let network = [...new Set([...userDoc.friends, ...partnerDoc.friends])];
 
       if (players[0] == user) {
-        profilePics = [
-          userDoc.photoUrl,
-          partnerDoc.photoUrl
-        ];
-        phones = [
-          userDoc.phoneNumber,
-          partnerDoc.phoneNumber
-        ];
-        colorIndexes=[
-          userDoc.avatarColorIndex,
-          partnerDoc.avatarColorIndex
-        ];
+        profilePics = [userDoc.photoUrl, partnerDoc.photoUrl];
+        phones = [userDoc.phoneNumber, partnerDoc.phoneNumber];
+        colorIndexes = [userDoc.avatarColorIndex, partnerDoc.avatarColorIndex];
       } else {
-        profilePics = [
-          partnerDoc.photoUrl,
-          userDoc.photoUrl
-        ];
-        phones = [
-          partnerDoc.phoneNumber,
-          userDoc.phoneNumber
-        ];
-        colorIndexes=[
-          partnerDoc.avatarColorIndex,
-          userDoc.avatarColorIndex        
-        ];
+        profilePics = [partnerDoc.photoUrl, userDoc.photoUrl];
+        phones = [partnerDoc.phoneNumber, userDoc.phoneNumber];
+        colorIndexes = [partnerDoc.avatarColorIndex, userDoc.avatarColorIndex];
       }
 
-      const teamsRef= doc(firestore,"teams",`${players[0]}+${players[1]}`);
+      const teamsRef = doc(firestore, "teams", `${players[0]}+${players[1]}`);
       transaction.set(teamsRef, {
-        id:`${players[0]}+${players[1]}`,
+        id: `${players[0]}+${players[1]}`,
         players,
         phones,
         profilePics,
         colorIndexes,
-        matchmakingAvailable:true,
-        isMatchmaking:false,
-        leader:user,
-        isOnline:true,
+        matchmakingAvailable: true,
+        isMatchmaking: false,
+        leader: user,
+        isOnline: true,
         network,
-        wins:0,
-        inMatch:false,
-        matchmkingWith:null
+        wins: 0,
+        inMatch: false,
+        matchmkingWith: null,
       });
-      transaction.update(userRef,{partner:partner})
-      transaction.update(partnerRef,{partner:user})
-
-    })
+      transaction.update(userRef, { partner: partner });
+      transaction.update(partnerRef, { partner: user });
+    });
   } catch (e) {
-    return {e:e.message, message: "Error with partner request"}
+    return { e: e.message, message: "Error with partner request" };
   }
 }
 
-async function setFriendship(requestor, requested){
-  try{
+async function setFriendship(requestor, requested) {
+  try {
     const userRef = doc(firestore, "users", requestor);
     const friendRef = doc(firestore, "users", requested);
-    let userDoc = await getDoc(userRef)
-    let friendDoc = await getDoc(friendRef)
+    let userDoc = await getDoc(userRef);
+    let friendDoc = await getDoc(friendRef);
     let userData = userDoc.data();
     let friendData = friendDoc.data();
 
-    userData.friends = userData.friends? userData.friends:[];
-    friendData.friends = friendData.friends? friendData.friends:[];
-    userData.friendRequests = userData.friendRequests? userData.friendRequests:[];
-    friendData.friendRequests = friendData.friendRequests? friendData.friendRequests:[];
-  
-    if(!userData.friends.find(friend=>friend===requested) && !friendData.friends.find(friend=>friend===requestor)){
-      console.log('not friends!');
+    userData.friends = userData.friends ? userData.friends : [];
+    friendData.friends = friendData.friends ? friendData.friends : [];
+    userData.friendRequests = userData.friendRequests
+      ? userData.friendRequests
+      : [];
+    friendData.friendRequests = friendData.friendRequests
+      ? friendData.friendRequests
+      : [];
+
+    if (
+      !userData.friends.find((friend) => friend === requested) &&
+      !friendData.friends.find((friend) => friend === requestor)
+    ) {
+      console.log("not friends!");
       userData.friends.push(requested);
       friendData.friends.push(requestor);
-      userData.friendRequests.splice(userData.friendRequests.indexOf(requested),1)
-      friendData.friendRequests.splice(friendData.friendRequests.indexOf(requestor),1)
-      console.log('userData',userData)
-      console.log('friendData',friendData)
-      let userResult = await updateDoc(userRef,{friends:userData.friends, friendRequests:userData.friendRequests})
-      let friendResult = await updateDoc(friendRef,{friends:friendData.friends, friendRequests:friendData.friendRequests})
-      return {success:true, userResult, friendResult}
+      userData.friendRequests.splice(
+        userData.friendRequests.indexOf(requested),
+        1
+      );
+      friendData.friendRequests.splice(
+        friendData.friendRequests.indexOf(requestor),
+        1
+      );
+      console.log("userData", userData);
+      console.log("friendData", friendData);
+      let userResult = await updateDoc(userRef, {
+        friends: userData.friends,
+        friendRequests: userData.friendRequests,
+      });
+      let friendResult = await updateDoc(friendRef, {
+        friends: friendData.friends,
+        friendRequests: friendData.friendRequests,
+      });
+      return { success: true, userResult, friendResult };
     }
-  } catch(e){
-    return {e:e.message, message: "Error with adding friend"}
+  } catch (e) {
+    return { e: e.message, message: "Error with adding friend" };
+  }
+}
+
+async function removePartner(user) {
+  try {
+    //const partnersQuery = query(collection(firestore,"partners_matchmaking"));
+    await runTransaction(firestore, async (transaction) => {
+      const userRef = doc(firestore, "users", user);
+      let userDoc = await transaction.get(userRef);
+      let userData = userDoc.data();
+      const partnerRef = doc(firestore, "users", userData.partner);
+      let partnerDoc = await transaction.get(partnerRef);
+      let partnerData = partnerDoc.data();
+      console.log(partnerData);
+      transaction.update(userRef, { partner: null});
+      transaction.update(partnerRef, { partner: null });
+      return { success: true};
+    });
+  } catch (e) {
+    return { e: e.message, message: "Error with removing partner" };
   }
 }
 module.exports = {
   createNewUser,
-  signInUser, 
-  signOutUser, 
+  signInUser,
+  signOutUser,
   joinPartnerQueue,
-  sendPartnerInvite, 
+  sendPartnerInvite,
   createTeam,
-  setFriendship
+  setFriendship,
+  removePartner
 };

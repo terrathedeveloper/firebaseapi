@@ -20,6 +20,7 @@ router.route("/playCard").post(controller.playCard).all(notAllowed);
 router.route("/registerUser").post(controller.registerUser).all(notAllowed);
 router.route("/removeExpiredMatches").get(controller.removeExpiredMatches).all(notAllowed)
 router.route("/removeExpiredPartnerMatches").get(controller.removeExpiredPartnerMatches).all(notAllowed)
+router.route("/removePartner").get(controller.removePartner).all(notAllowed)
 router.route("/sendFriendsRequest").get(controller.sendFriendsRequest).all(notAllowed)
 router.route("/sendPartnersRequest").get(controller.sendPartnersRequest).all(notAllowed)
 router.route("/signInUser").post(controller.signInUser).all(notAllowed)

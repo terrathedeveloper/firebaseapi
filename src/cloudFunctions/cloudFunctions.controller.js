@@ -57,6 +57,7 @@ async function onPartnerMatchmaking(req, res) {
   const result = await service.joinPartnerQueue(user);
   res.status(200).send(result)
 }
+
 async function onSelectedTeamMatchmaking(req, res) {
   res.status(200).send('Template successful')
 }
@@ -81,6 +82,14 @@ async function removeExpiredMatches(req, res) {
 }
 async function removeExpiredPartnerMatches(req, res) {
   res.status(200).send('Template successful')
+}
+
+
+async function removePartner(req, res){
+  const user = req.query.user;
+  const result = await service.removePartner(user)
+
+  res.status(200).json(result)
 }
 async function sendFriendsRequest(req, res) {
   res.status(200).send('Template successful')
@@ -122,6 +131,7 @@ module.exports = {
   registerUser,
   removeExpiredMatches,
   removeExpiredPartnerMatches,
+  removePartner,
   sendFriendsRequest,
   sendPartnersRequest,
   signInUser,
