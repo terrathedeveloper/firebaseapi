@@ -10,7 +10,8 @@ const {
   deleteDoc,
   doc,
   runTransaction,
-  serverTimestamp
+  serverTimestamp,
+  updateDoc
 } = require("firebase/firestore");
 const {
   getAuth,
@@ -218,11 +219,43 @@ async function createTeam(user,partner){
     return {e:e.message, message: "Error with partner request"}
   }
 }
+
+async function setFriendship(requestor, requested){
+  try{
+    const userRef = doc(firestore, "users", requestor);
+    const friendRef = doc(firestore, "users", requested);
+    let userDoc = await getDoc(userRef)
+    let friendDoc = await getDoc(friendRef)
+    let userData = userDoc.data();
+    let friendData = friendDoc.data();
+
+    userData.friends = userData.friends? userData.friends:[];
+    friendData.friends = friendData.friends? friendData.friends:[];
+    userData.friendRequests = userData.friendRequests? userData.friendRequests:[];
+    friendData.friendRequests = friendData.friendRequests? friendData.friendRequests:[];
+  
+    if(!userData.friends.find(friend=>friend===requested) && !friendData.friends.find(friend=>friend===requestor)){
+      console.log('not friends!');
+      userData.friends.push(requested);
+      friendData.friends.push(requestor);
+      userData.friendRequests.splice(userData.friendRequests.indexOf(requested),1)
+      friendData.friendRequests.splice(friendData.friendRequests.indexOf(requestor),1)
+      console.log('userData',userData)
+      console.log('friendData',friendData)
+      let userResult = await updateDoc(userRef,{friends:userData.friends, friendRequests:userData.friendRequests})
+      let friendResult = await updateDoc(friendRef,{friends:friendData.friends, friendRequests:friendData.friendRequests})
+      return {success:true, userResult, friendResult}
+    }
+  } catch(e){
+    return {e:e.message, message: "Error with adding friend"}
+  }
+}
 module.exports = {
   createNewUser,
   signInUser, 
   signOutUser, 
   joinPartnerQueue,
   sendPartnerInvite, 
-  createTeam
+  createTeam,
+  setFriendship
 };

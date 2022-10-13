@@ -31,21 +31,10 @@ const database = getDatabase(app)
  // Middleware fxns ==========================================================
  
 async function addFriend(req, res) {
-  let userId = 'terra';
+  let {user,requestor}=req.query;
+  const result = await service.setFriendship(user, requestor)
 
-  await set(ref(database, 'users/' + userId), {
-    username: 'terrat',
-    email: 'terra@taylor.com',
-    profile_picture : 'http://www/gppg;e/cp,'
-  });
-
-  await setDoc(doc(firestore, "cities", "LA"), {
-    name: "Los Angeles",
-    state: "CA",
-    country: "USA"
-  });
-
-  return res.status(200).send('Template successful')
+  return res.status(200).json(result)
 }
 async function endRound(req, res) {
   res.status(200).send('Template successful')
