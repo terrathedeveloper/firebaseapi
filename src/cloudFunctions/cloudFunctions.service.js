@@ -161,7 +161,7 @@ async function createTeam(user, partner) {
       const partnerRef = doc(firestore, "users", partner);
       let userDoc = await getDoc(doc(firestore, "users", user));
       let partnerDoc = await getDoc(doc(firestore, "users", partner));
-
+      
       userDoc = userDoc.data();
       partnerDoc = partnerDoc.data();
       console.log(userDoc.friends);
@@ -264,9 +264,13 @@ async function removePartner(user) {
       const userRef = doc(firestore, "users", user);
       let userDoc = await transaction.get(userRef);
       let userData = userDoc.data();
-      const partnerRef = doc(firestore, "users", userData.partner);
+      const partnerRef = doc(firestore, "users", userData.partner);      
       let partnerDoc = await transaction.get(partnerRef);
       let partnerData = partnerDoc.data();
+      let orderedPartner = [user,userData.partner].sort()
+      let partnerStr = `${orderedPartner[0]}+${orderedPartner[1]}`
+      const teamRef = doc(firestore,"teams",partnerStr)
+      transaction.delete(teamRef);
       console.log(partnerData);
       transaction.update(userRef, { partner: null});
       transaction.update(partnerRef, { partner: null });
