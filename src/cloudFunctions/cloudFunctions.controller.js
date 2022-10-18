@@ -62,7 +62,10 @@ async function onSelectedTeamMatchmaking(req, res) {
   res.status(200).send('Template successful')
 }
 async function onTeamMatchmaking(req, res) {
-  res.status(200).send('Template successful')
+  const {user,userTeam,otherTeam}= req.body;
+  console.log('on team matchmaking');
+  const result = await service.onRandomTeamMatchmaking(user, userTeam, otherTeam)
+  res.status(200).json(result)
 }
 async function playCard(req, res) {
   res.status(200).send('Template successful')

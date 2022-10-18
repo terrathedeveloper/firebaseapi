@@ -15,7 +15,7 @@ router.route("/getRtcToken").get(controller.getRtcToken).all(notAllowed);
 router.route("/handlePartnersTransaction").post(controller.handlePartnersTransaction).all(notAllowed)
 router.route("/onPartnerMatchmaking").get(controller.onPartnerMatchmaking).all(notAllowed)
 router.route("/onSelectedTeamMatchmaking").get(controller.onSelectedTeamMatchmaking).all(notAllowed)
-router.route("/onTeamMatchmaking").get(controller.onTeamMatchmaking).all(notAllowed)
+router.route("/onTeamMatchmaking").post(controller.onTeamMatchmaking).all(notAllowed)
 router.route("/playCard").post(controller.playCard).all(notAllowed);
 router.route("/registerUser").post(controller.registerUser).all(notAllowed);
 router.route("/removeExpiredMatches").get(controller.removeExpiredMatches).all(notAllowed)

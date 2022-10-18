@@ -12,6 +12,7 @@ const {
   runTransaction,
   serverTimestamp,
   updateDoc,
+  arrayUnion,
 } = require("firebase/firestore");
 const {
   getAuth,
@@ -161,7 +162,7 @@ async function createTeam(user, partner) {
       const partnerRef = doc(firestore, "users", partner);
       let userDoc = await getDoc(doc(firestore, "users", user));
       let partnerDoc = await getDoc(doc(firestore, "users", partner));
-      
+
       userDoc = userDoc.data();
       partnerDoc = partnerDoc.data();
       console.log(userDoc.friends);
@@ -264,22 +265,52 @@ async function removePartner(user) {
       const userRef = doc(firestore, "users", user);
       let userDoc = await transaction.get(userRef);
       let userData = userDoc.data();
-      const partnerRef = doc(firestore, "users", userData.partner);      
+      const partnerRef = doc(firestore, "users", userData.partner);
       let partnerDoc = await transaction.get(partnerRef);
       let partnerData = partnerDoc.data();
-      let orderedPartner = [user,userData.partner].sort()
-      let partnerStr = `${orderedPartner[0]}+${orderedPartner[1]}`
-      const teamRef = doc(firestore,"teams",partnerStr)
+      let orderedPartner = [user, userData.partner].sort();
+      let partnerStr = `${orderedPartner[0]}+${orderedPartner[1]}`;
+      const teamRef = doc(firestore, "teams", partnerStr);
       transaction.delete(teamRef);
       console.log(partnerData);
-      transaction.update(userRef, { partner: null});
+      transaction.update(userRef, { partner: null });
       transaction.update(partnerRef, { partner: null });
-      return { success: true};
+      return { success: true };
     });
   } catch (e) {
     return { e: e.message, message: "Error with removing partner" };
   }
 }
+
+async function onRandomTeamMatchmaking(user, userTeam, otherTeam) {
+  try {
+    await runTransaction(firestore, async (transaction) => {
+      const matchmakingRef = doc(firestore, "teams_matchmaking", userTeam);
+      let matchmakingDoc = await transaction.get(matchmakingRef);
+      let matchData = matchmakingDoc.data();
+      if (matchData) {
+        transaction.update(doc(firestore, "teams_matchmaking", userTeam), {
+          players: arrayUnion(user),
+          timestamp: serverTimestamp(),
+        });
+      } else {
+        transaction.set(doc(firestore, "teams_matchmaking", userTeam), {
+          players: [user],
+          timestamp: serverTimestamp(),
+          teamId: userTeam,
+          matchingWith: otherTeam != "" ? otherTeam : null,
+        });
+      }
+      const teamRef = doc(firestore, "teams", userTeam);
+      transaction.update(teamRef,{isMatchmaking:true})
+    });
+    return { success: true };
+  } catch (e) {
+    console.log(e.message);
+    return { e: e.message, message: "Error with removing partner" };
+  }
+}
+
 module.exports = {
   createNewUser,
   signInUser,
@@ -288,5 +319,6 @@ module.exports = {
   sendPartnerInvite,
   createTeam,
   setFriendship,
-  removePartner
+  removePartner,
+  onRandomTeamMatchmaking,
 };
