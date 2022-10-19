@@ -274,9 +274,9 @@ async function removePartner(user) {
       transaction.delete(teamRef);
       console.log(partnerData);
       transaction.update(userRef, { partner: null });
-      transaction.update(partnerRef, { partner: null });
-      return { success: true };
+      transaction.update(partnerRef, { partner: null });      
     });
+    return { success: true };
   } catch (e) {
     return { e: e.message, message: "Error with removing partner" };
   }
@@ -302,7 +302,7 @@ async function onRandomTeamMatchmaking(user, userTeam, otherTeam) {
         });
       }
       const teamRef = doc(firestore, "teams", userTeam);
-      transaction.update(teamRef,{isMatchmaking:true})
+      transaction.update(teamRef,{isMatchmaking:true, matchmakingWith:otherTeam != "" ? otherTeam : null})
     });
     return { success: true };
   } catch (e) {
