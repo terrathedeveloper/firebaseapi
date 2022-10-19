@@ -298,11 +298,11 @@ async function onRandomTeamMatchmaking(user, userTeam, otherTeam) {
           players: [user],
           timestamp: serverTimestamp(),
           teamId: userTeam,
-          matchingWith: otherTeam != "" ? otherTeam : null,
+          matchingWith: otherTeam != "" ? otherTeam : 'random',
         });
       }
       const teamRef = doc(firestore, "teams", userTeam);
-      transaction.update(teamRef,{isMatchmaking:true, matchmakingWith:otherTeam != "" ? otherTeam : null})
+      transaction.update(teamRef,{isMatchmaking:true, matchmakingWith:otherTeam != "" ? otherTeam : 'random'})
     });
     return { success: true };
   } catch (e) {
