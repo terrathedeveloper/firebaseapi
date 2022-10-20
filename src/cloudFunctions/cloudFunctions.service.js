@@ -198,7 +198,7 @@ async function createTeam(user, partner) {
         network,
         wins: 0,
         inMatch: false,
-        matchmkingWith: null,
+        matchmakingWith: null,
       });
       transaction.update(userRef, { partner: partner });
       transaction.update(partnerRef, { partner: user });
