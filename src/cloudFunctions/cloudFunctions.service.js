@@ -199,6 +199,7 @@ async function createTeam(user, partner) {
         wins: 0,
         inMatch: false,
         matchmakingWith: null,
+        playersReady:[]
       });
       transaction.update(userRef, { partner: partner });
       transaction.update(partnerRef, { partner: user });
@@ -302,7 +303,7 @@ async function onRandomTeamMatchmaking(user, userTeam, otherTeam) {
         });
       }
       const teamRef = doc(firestore, "teams", userTeam);
-      transaction.update(teamRef,{isMatchmaking:true, matchmakingWith:otherTeam != null ? otherTeam : 'random'})
+      transaction.update(teamRef,{playersReady:arrayUnion(user),isMatchmaking:true, matchmakingWith:otherTeam != null ? otherTeam : 'random'})
     });
     return { success: true };
   } catch (e) {
