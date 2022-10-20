@@ -15,6 +15,7 @@ const {
   arrayUnion,
   arrayRemove,
 } = require("firebase/firestore");
+const {getDatabase, ref, set} = require("firebase/database");
 const {
   getAuth,
   createUserWithEmailAndPassword,
@@ -30,7 +31,6 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://thebigjokerprod-default-rtdb.firebaseio.com",
 });
-const { getDatabase, ref, set } = require("firebase/database");
 const firebaseConfig = {
   apiKey: "AIzaSyDxiEUWmZjUkdS4W00OTmX2w6_ZDQJH9M4",
   authDomain: "thebigjokerprod.firebaseapp.com",
@@ -43,7 +43,8 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const firestore = getFirestore(app);
-const database = getDatabase(app);
+const firebase = getDatabase(app);
+const db = admin.database();
 
 async function createNewUser(userData, phoneNumber) {
   let initUser = {
@@ -90,6 +91,14 @@ async function joinPartnerQueue(username) {
         timestamp: serverTimestamp(),
       }
     );
+
+    
+    const matchmakingRef = db.ref('partners_matchmaking');
+    matchmakingRef.child(username).set({
+        player: username,
+        timestamp: serverTimestamp(),
+    })
+
     return { addedToQueue: true };
   } catch (e) {
     return { e: e.message, message: "Error joining partner queue" };
@@ -152,7 +161,6 @@ async function sendPartnerInvite(token, username, type) {
 }
 
 async function createTeam(user, partner) {
-  console.log(`${user}+${partner}`);
 
   try {
     //const partnersQuery = query(collection(firestore,"partners_matchmaking"));
@@ -297,7 +305,9 @@ async function removePartner(user) {
 
 async function onRandomTeamMatchmaking(user, userTeam, otherTeam) {
   try {
-    await runTransaction(firestore, async (transaction) => {
+
+
+    /*await runTransaction(firestore, async (transaction) => {
       const matchmakingRef = doc(firestore, "teams_matchmaking", userTeam);
       let matchmakingDoc = await transaction.get(matchmakingRef);
       let matchData = matchmakingDoc.data();
@@ -320,7 +330,7 @@ async function onRandomTeamMatchmaking(user, userTeam, otherTeam) {
         isMatchmaking: true,
         matchmakingWith: otherTeam != null ? otherTeam : "random",
       });
-    });
+    });*/
     return { success: true };
   } catch (e) {
     console.log(e.message);
