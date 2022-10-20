@@ -13,6 +13,7 @@ const {
   serverTimestamp,
   updateDoc,
   arrayUnion,
+  arrayRemove,
 } = require("firebase/firestore");
 const {
   getAuth,
@@ -312,6 +313,28 @@ async function onRandomTeamMatchmaking(user, userTeam, otherTeam) {
   }
 }
 
+async function onCancelTeamMatchmaking(user, partner) {
+  let userTeam = [user, partner].sort();
+  const userTeamId = `${userTeam[0]}+${userTeam[1]}`;
+  console.log(userTeamId)
+  try {
+    await runTransaction(firestore, async (transaction) => {
+      const matchmakingRef = doc(firestore, "teams_matchmaking", userTeamId);
+      transaction.delete(matchmakingRef);     
+      const teamRef = doc(firestore, "teams", userTeamId); 
+      const userRef = doc(firestore, "users", user); 
+      const partnerRef = doc(firestore, "users", partner); 
+      transaction.update(teamRef,{playersReady:arrayRemove(user),isMatchmaking:false, matchmakingWith:null, inMatch:null})
+      transaction.update(userRef,{'isMatchmaking':false})
+      transaction.update(partnerRef,{'isMatchmaking':false})
+    });
+    return { success: true };
+  } catch (e) {
+    console.log(e.message);
+    return { e: e.message, message: "Error with cancelling team matchmaking" };
+  }
+}
+
 module.exports = {
   createNewUser,
   signInUser,
@@ -322,4 +345,5 @@ module.exports = {
   setFriendship,
   removePartner,
   onRandomTeamMatchmaking,
+  onCancelTeamMatchmaking,
 };

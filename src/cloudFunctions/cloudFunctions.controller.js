@@ -67,6 +67,13 @@ async function onTeamMatchmaking(req, res) {
   const result = await service.onRandomTeamMatchmaking(user, userTeam, otherTeam)
   res.status(200).json(result)
 }
+
+async function onCancelMatchmaking(req, res) {
+  const {user, partner}= req.body;
+  console.log('on cancel matchmaking');
+  const result = await service.onCancelTeamMatchmaking(user, partner)
+  res.status(200).json(result)
+}
 async function playCard(req, res) {
   res.status(200).send('Template successful')
 }
@@ -130,6 +137,7 @@ module.exports = {
   onPartnerMatchmaking,
   onSelectedTeamMatchmaking,
   onTeamMatchmaking,
+  onCancelMatchmaking,
   playCard,
   registerUser,
   removeExpiredMatches,

@@ -16,6 +16,7 @@ router.route("/handlePartnersTransaction").post(controller.handlePartnersTransac
 router.route("/onPartnerMatchmaking").get(controller.onPartnerMatchmaking).all(notAllowed)
 router.route("/onSelectedTeamMatchmaking").get(controller.onSelectedTeamMatchmaking).all(notAllowed)
 router.route("/onTeamMatchmaking").post(controller.onTeamMatchmaking).all(notAllowed)
+router.route("/onCancelMatchmaking").post(controller.onCancelMatchmaking).all(notAllowed)
 router.route("/playCard").post(controller.playCard).all(notAllowed);
 router.route("/registerUser").post(controller.registerUser).all(notAllowed);
 router.route("/removeExpiredMatches").get(controller.removeExpiredMatches).all(notAllowed)
