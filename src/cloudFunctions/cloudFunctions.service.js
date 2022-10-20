@@ -157,8 +157,6 @@ async function createTeam(user, partner) {
   try {
     //const partnersQuery = query(collection(firestore,"partners_matchmaking"));
     await runTransaction(firestore, async (transaction) => {
-      await deleteDoc(doc(firestore, "partners_matchmaking", user));
-      await deleteDoc(doc(firestore, "partners_matchmaking", partner));
       const userRef = doc(firestore, "users", user);
       const partnerRef = doc(firestore, "users", partner);
       let userDoc = await getDoc(doc(firestore, "users", user));
@@ -166,44 +164,57 @@ async function createTeam(user, partner) {
 
       userDoc = userDoc.data();
       partnerDoc = partnerDoc.data();
-      console.log(userDoc.friends);
-      userDoc.friends = userDoc.friends ? userDoc.friends : [];
-      partnerDoc.friends = partnerDoc.friends ? partnerDoc.friends : [];
-      let profilePics = [];
-      let phones = [];
-      let colorIndexes = [];
-      let players = [user, partner].sort();
-      let network = [...new Set([...userDoc.friends, ...partnerDoc.friends])];
+      if (!userDoc.partner && !partnerDoc.partner) {
+        console.log(userDoc.friends);
+        userDoc.friends = userDoc.friends ? userDoc.friends : [];
+        partnerDoc.friends = partnerDoc.friends ? partnerDoc.friends : [];
+        let profilePics = [];
+        let phones = [];
+        let colorIndexes = [];
+        let players = [user, partner].sort();
+        let network = [...new Set([...userDoc.friends, ...partnerDoc.friends])];
 
-      if (players[0] == user) {
-        profilePics = [userDoc.photoUrl, partnerDoc.photoUrl];
-        phones = [userDoc.phoneNumber, partnerDoc.phoneNumber];
-        colorIndexes = [userDoc.avatarColorIndex, partnerDoc.avatarColorIndex];
-      } else {
-        profilePics = [partnerDoc.photoUrl, userDoc.photoUrl];
-        phones = [partnerDoc.phoneNumber, userDoc.phoneNumber];
-        colorIndexes = [partnerDoc.avatarColorIndex, userDoc.avatarColorIndex];
+        if (players[0] == user) {
+          profilePics = [userDoc.photoUrl, partnerDoc.photoUrl];
+          phones = [userDoc.phoneNumber, partnerDoc.phoneNumber];
+          colorIndexes = [
+            userDoc.avatarColorIndex,
+            partnerDoc.avatarColorIndex,
+          ];
+        } else {
+          profilePics = [partnerDoc.photoUrl, userDoc.photoUrl];
+          phones = [partnerDoc.phoneNumber, userDoc.phoneNumber];
+          colorIndexes = [
+            partnerDoc.avatarColorIndex,
+            userDoc.avatarColorIndex,
+          ];
+        }
+
+        const teamsRef = doc(firestore, "teams", `${players[0]}+${players[1]}`);
+        transaction.set(teamsRef, {
+          id: `${players[0]}+${players[1]}`,
+          players,
+          phones,
+          profilePics,
+          colorIndexes,
+          matchmakingAvailable: true,
+          isMatchmaking: false,
+          leader: user,
+          isOnline: true,
+          network,
+          wins: 0,
+          inMatch: false,
+          matchmakingWith: null,
+          playersReady: [],
+        });
+        transaction.update(userRef, { partner: partner });
+        transaction.update(partnerRef, { partner: user });
+        await deleteDoc(doc(firestore, "partners_matchmaking", user));
+        await deleteDoc(doc(firestore, "partners_matchmaking", partner));
       }
-
-      const teamsRef = doc(firestore, "teams", `${players[0]}+${players[1]}`);
-      transaction.set(teamsRef, {
-        id: `${players[0]}+${players[1]}`,
-        players,
-        phones,
-        profilePics,
-        colorIndexes,
-        matchmakingAvailable: true,
-        isMatchmaking: false,
-        leader: user,
-        isOnline: true,
-        network,
-        wins: 0,
-        inMatch: false,
-        matchmakingWith: null,
-        playersReady:[]
-      });
-      transaction.update(userRef, { partner: partner });
-      transaction.update(partnerRef, { partner: user });
+      else{
+        return {error:'Partner no longer available'}
+      }
     });
   } catch (e) {
     return { e: e.message, message: "Error with partner request" };
@@ -276,7 +287,7 @@ async function removePartner(user) {
       transaction.delete(teamRef);
       console.log(partnerData);
       transaction.update(userRef, { partner: null });
-      transaction.update(partnerRef, { partner: null });      
+      transaction.update(partnerRef, { partner: null });
     });
     return { success: true };
   } catch (e) {
@@ -300,11 +311,15 @@ async function onRandomTeamMatchmaking(user, userTeam, otherTeam) {
           players: [user],
           timestamp: serverTimestamp(),
           teamId: userTeam,
-          matchingWith: otherTeam != null ? otherTeam : 'random',
+          matchingWith: otherTeam != null ? otherTeam : "random",
         });
       }
       const teamRef = doc(firestore, "teams", userTeam);
-      transaction.update(teamRef,{playersReady:arrayUnion(user),isMatchmaking:true, matchmakingWith:otherTeam != null ? otherTeam : 'random'})
+      transaction.update(teamRef, {
+        playersReady: arrayUnion(user),
+        isMatchmaking: true,
+        matchmakingWith: otherTeam != null ? otherTeam : "random",
+      });
     });
     return { success: true };
   } catch (e) {
@@ -316,17 +331,22 @@ async function onRandomTeamMatchmaking(user, userTeam, otherTeam) {
 async function onCancelTeamMatchmaking(user, partner) {
   let userTeam = [user, partner].sort();
   const userTeamId = `${userTeam[0]}+${userTeam[1]}`;
-  console.log(userTeamId)
+  console.log(userTeamId);
   try {
     await runTransaction(firestore, async (transaction) => {
       const matchmakingRef = doc(firestore, "teams_matchmaking", userTeamId);
-      transaction.delete(matchmakingRef);     
-      const teamRef = doc(firestore, "teams", userTeamId); 
-      const userRef = doc(firestore, "users", user); 
-      const partnerRef = doc(firestore, "users", partner); 
-      transaction.update(teamRef,{playersReady:arrayRemove(user),isMatchmaking:false, matchmakingWith:null, inMatch:null})
-      transaction.update(userRef,{'isMatchmaking':false})
-      transaction.update(partnerRef,{'isMatchmaking':false})
+      transaction.delete(matchmakingRef);
+      const teamRef = doc(firestore, "teams", userTeamId);
+      const userRef = doc(firestore, "users", user);
+      const partnerRef = doc(firestore, "users", partner);
+      transaction.update(teamRef, {
+        playersReady: arrayRemove(user),
+        isMatchmaking: false,
+        matchmakingWith: null,
+        inMatch: null,
+      });
+      transaction.update(userRef, { isMatchmaking: false });
+      transaction.update(partnerRef, { isMatchmaking: false });
     });
     return { success: true };
   } catch (e) {
