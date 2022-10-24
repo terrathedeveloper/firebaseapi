@@ -81,7 +81,78 @@ async function createNewUser(userData, phoneNumber) {
     return { e: e.message, message: "Error creating user" };
   }
 }
+async function createTeam(user, partner) {
+  const matchmakingRef = db.ref('partners_matchmaking');
+  await matchmakingRef.child(user).remove()
+  await matchmakingRef.child(partner).remove()
+  try {
+    //const partnersQuery = query(collection(firestore,"partners_matchmaking"));
+    await runTransaction(firestore, async (transaction) => {
+      const userRef = doc(firestore, "users", user);
+      const partnerRef = doc(firestore, "users", partner);
+      let userDoc = await getDoc(doc(firestore, "users", user));
+      let partnerDoc = await getDoc(doc(firestore, "users", partner));
 
+      userDoc = userDoc.data();
+      partnerDoc = partnerDoc.data();
+      if (!userDoc.partner && !partnerDoc.partner) {
+        console.log(userDoc.friends);
+        userDoc.friends = userDoc.friends ? userDoc.friends : [];
+        partnerDoc.friends = partnerDoc.friends ? partnerDoc.friends : [];
+        let profilePics = [];
+        let phones = [];
+        let colorIndexes = [];
+        let players = [user, partner].sort();
+        let network = [...new Set([...userDoc.friends, ...partnerDoc.friends])];
+
+        if (players[0] == user) {
+          profilePics = [userDoc.photoUrl, partnerDoc.photoUrl];
+          phones = [userDoc.phoneNumber, partnerDoc.phoneNumber];
+          colorIndexes = [
+            userDoc.avatarColorIndex,
+            partnerDoc.avatarColorIndex,
+          ];
+        } else {
+          profilePics = [partnerDoc.photoUrl, userDoc.photoUrl];
+          phones = [partnerDoc.phoneNumber, userDoc.phoneNumber];
+          colorIndexes = [
+            partnerDoc.avatarColorIndex,
+            userDoc.avatarColorIndex,
+          ];
+        }
+
+        const teamsRef = doc(firestore, "teams", `${players[0]}+${players[1]}`);
+        transaction.set(teamsRef, {
+          id: `${players[0]}+${players[1]}`,
+          players,
+          phones,
+          profilePics,
+          colorIndexes,
+          matchmakingAvailable: true,
+          isMatchmaking: false,
+          leader: user,
+          isOnline: true,
+          network,
+          wins: 0,
+          inMatch: false,
+          matchmakingWith: null,
+          playersReady: [],
+        });
+       
+
+        transaction.update(userRef, { partner: partner });
+        transaction.update(partnerRef, { partner: user });
+        await deleteDoc(doc(firestore, "partners_matchmaking", user));
+        await deleteDoc(doc(firestore, "partners_matchmaking", partner));
+      }
+      else{
+        return {error:'Partner no longer available'}
+      }
+    });
+  } catch (e) {
+    return { e: e.message, message: "Error with partner request" };
+  }
+}
 async function joinPartnerQueue(username) {
   try {
     const result = await setDoc(
@@ -160,74 +231,7 @@ async function sendPartnerInvite(token, username, type) {
   }
 }
 
-async function createTeam(user, partner) {
 
-  try {
-    //const partnersQuery = query(collection(firestore,"partners_matchmaking"));
-    await runTransaction(firestore, async (transaction) => {
-      const userRef = doc(firestore, "users", user);
-      const partnerRef = doc(firestore, "users", partner);
-      let userDoc = await getDoc(doc(firestore, "users", user));
-      let partnerDoc = await getDoc(doc(firestore, "users", partner));
-
-      userDoc = userDoc.data();
-      partnerDoc = partnerDoc.data();
-      if (!userDoc.partner && !partnerDoc.partner) {
-        console.log(userDoc.friends);
-        userDoc.friends = userDoc.friends ? userDoc.friends : [];
-        partnerDoc.friends = partnerDoc.friends ? partnerDoc.friends : [];
-        let profilePics = [];
-        let phones = [];
-        let colorIndexes = [];
-        let players = [user, partner].sort();
-        let network = [...new Set([...userDoc.friends, ...partnerDoc.friends])];
-
-        if (players[0] == user) {
-          profilePics = [userDoc.photoUrl, partnerDoc.photoUrl];
-          phones = [userDoc.phoneNumber, partnerDoc.phoneNumber];
-          colorIndexes = [
-            userDoc.avatarColorIndex,
-            partnerDoc.avatarColorIndex,
-          ];
-        } else {
-          profilePics = [partnerDoc.photoUrl, userDoc.photoUrl];
-          phones = [partnerDoc.phoneNumber, userDoc.phoneNumber];
-          colorIndexes = [
-            partnerDoc.avatarColorIndex,
-            userDoc.avatarColorIndex,
-          ];
-        }
-
-        const teamsRef = doc(firestore, "teams", `${players[0]}+${players[1]}`);
-        transaction.set(teamsRef, {
-          id: `${players[0]}+${players[1]}`,
-          players,
-          phones,
-          profilePics,
-          colorIndexes,
-          matchmakingAvailable: true,
-          isMatchmaking: false,
-          leader: user,
-          isOnline: true,
-          network,
-          wins: 0,
-          inMatch: false,
-          matchmakingWith: null,
-          playersReady: [],
-        });
-        transaction.update(userRef, { partner: partner });
-        transaction.update(partnerRef, { partner: user });
-        await deleteDoc(doc(firestore, "partners_matchmaking", user));
-        await deleteDoc(doc(firestore, "partners_matchmaking", partner));
-      }
-      else{
-        return {error:'Partner no longer available'}
-      }
-    });
-  } catch (e) {
-    return { e: e.message, message: "Error with partner request" };
-  }
-}
 
 async function setFriendship(requestor, requested) {
   try {
