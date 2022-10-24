@@ -118,6 +118,12 @@ async function signOutUser(req, res) {
   const result = await service.signOutUser();
   res.status(200).json(result)
 }
+
+async function startMatch(req, res){
+  const {team1Id,team2Id, user} = req.body;
+  let result = await service.onMatchStart(team1Id, team2Id, user)
+  res.status(200).json(result)
+}
 async function teamMatchmakingRedirect(req, res) {
   res.status(200).send('Template successful')
 }
@@ -147,6 +153,7 @@ module.exports = {
   sendPartnersRequest,
   signInUser,
   signOutUser,
+  startMatch,
   teamMatchmakingRedirect,
   updateGameReadyCount,
   updateLobbyReadyCount
