@@ -314,7 +314,7 @@ async function onRandomTeamMatchmaking(user, userTeam, otherTeam) {
   try {
 
 
-    /*await runTransaction(firestore, async (transaction) => {
+    await runTransaction(firestore, async (transaction) => {
       const matchmakingRef = doc(firestore, "teams_matchmaking", userTeam);
       let matchmakingDoc = await transaction.get(matchmakingRef);
       let matchData = matchmakingDoc.data();
@@ -337,7 +337,7 @@ async function onRandomTeamMatchmaking(user, userTeam, otherTeam) {
         isMatchmaking: true,
         matchmakingWith: otherTeam != null ? otherTeam : "random",
       });
-    });*/
+    });
     return { success: true };
   } catch (e) {
     console.log(e.message);
