@@ -82,19 +82,22 @@ async function createNewUser(userData, phoneNumber) {
   }
 }
 async function createTeam(user, partner) {
-  const matchmakingRef = db.ref('partners_matchmaking');
-  await matchmakingRef.child(user).remove()
-  await matchmakingRef.child(partner).remove()
+ // const matchmakingRef = db.ref('partners_matchmaking');
+ // await matchmakingRef.child(user).remove()
+ // await matchmakingRef.child(partner).remove()
   try {
     //const partnersQuery = query(collection(firestore,"partners_matchmaking"));
     await runTransaction(firestore, async (transaction) => {
       const userRef = doc(firestore, "users", user);
       const partnerRef = doc(firestore, "users", partner);
-      let userDoc = await getDoc(doc(firestore, "users", user));
-      let partnerDoc = await getDoc(doc(firestore, "users", partner));
+      let userDoc = await transaction.get(userRef);
+      let partnerDoc = await transaction.get(partnerRef);
 
       userDoc = userDoc.data();
       partnerDoc = partnerDoc.data();
+      console.log(userDoc.partner)
+      console.log(partnerDoc.partner)
+
       if (!userDoc.partner && !partnerDoc.partner) {
         console.log(userDoc.friends);
         userDoc.friends = userDoc.friends ? userDoc.friends : [];
@@ -164,13 +167,13 @@ async function joinPartnerQueue(username) {
     );
 
     
-    const matchmakingRef = db.ref('partners_matchmaking');
+    /*const matchmakingRef = db.ref('partners_matchmaking');
     matchmakingRef.child(username).set({
         player: username,
         timestamp: serverTimestamp(),
-    })
+    })*/
 
-    return { addedToQueue: true };
+    return { addedToQueue: true, result };
   } catch (e) {
     return { e: e.message, message: "Error joining partner queue" };
   }
