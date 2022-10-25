@@ -455,6 +455,33 @@ async function onCancelTeamMatchmaking(user, partner) {
   }
 }
 
+async function setPlayerReady(gameLobbyId, user) {
+ 
+  try {
+    await runTransaction(firestore, async (transaction) => {
+      const gameLobbyRef = doc(firestore, "games_lobby", gameLobbyId);
+      const game = await transaction.get(gameLobbyRef);
+      const team1Ref = doc(firestore,"teams", game.data().teams[0])
+      const team2Ref = doc(firestore,"teams", game.data().teams[1])
+      
+      console.log(game.data().teams)
+      transaction.update(gameLobbyRef, {
+        lobbyReadyCount: arrayUnion(user),
+      })
+      transaction.update(team1Ref, {
+        inMatch: true,
+      })
+      transaction.update(team2Ref, {
+        inMatch: true,
+      })
+    });
+    return { success: true };
+  } catch (e) {
+    console.log(e.message);
+    return { e: e.message, message: "Error with setting player to lobby ready" };
+  }
+}
+
 module.exports = {
   createNewUser,
   signInUser,
@@ -467,5 +494,6 @@ module.exports = {
   removePartner,
   onRandomTeamMatchmaking,
   onCancelTeamMatchmaking,
+  setPlayerReady,
   onMatchStart
 };

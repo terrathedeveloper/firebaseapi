@@ -30,6 +30,6 @@ router.route("/signOutUser").post(controller.signOutUser).all(notAllowed)
 router.route("/startGame").post(controller.startMatch).all(notAllowed)
 router.route("/teamMatchmakingRedirect").get(controller.teamMatchmakingRedirect).all(notAllowed)
 router.route("/updateGameReadyCount").get(controller.updateGameReadyCount).all(notAllowed)
-router.route("/updateLobbyReadyCount").get(controller.updateLobbyReadyCount).all(notAllowed)
+router.route("/updateLobbyReadyCount").post(controller.updateLobbyReadyCount).all(notAllowed)
 
  module.exports = router;

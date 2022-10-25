@@ -135,7 +135,9 @@ async function updateGameReadyCount(req, res) {
   res.status(200).send('Template successful')
 }
 async function updateLobbyReadyCount(req, res) {
-  res.status(200).send('Template successful')
+  const {gameLobbyId,user} = req.body;
+  const result = await service.setPlayerReady(gameLobbyId, user);
+  res.status(200).json(result)
 }
 
 module.exports = {
