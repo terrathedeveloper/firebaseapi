@@ -14,6 +14,7 @@ router.route("/gameLobbyQuit").get(controller.gameLobbyQuit).all(notAllowed);
 router.route("/getRtcToken").get(controller.getRtcToken).all(notAllowed);
 router.route("/handlePartnersTransaction").post(controller.handlePartnersTransaction).all(notAllowed)
 router.route("/onPartnerMatchmaking").get(controller.onPartnerMatchmaking).all(notAllowed)
+router.route("/onCancelPartnerMatchmaking").get(controller.onCancelPartnerMatchmaking).all(notAllowed)
 router.route("/onSelectedTeamMatchmaking").get(controller.onSelectedTeamMatchmaking).all(notAllowed)
 router.route("/onTeamMatchmaking").post(controller.onTeamMatchmaking).all(notAllowed)
 router.route("/onCancelMatchmaking").post(controller.onCancelMatchmaking).all(notAllowed)

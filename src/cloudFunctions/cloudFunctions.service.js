@@ -179,6 +179,26 @@ async function joinPartnerQueue(username) {
   }
 }
 
+async function exitPartnerQueue(username) {
+  console.log(username)
+    try {
+      //const partnersQuery = query(collection(firestore,"partners_matchmaking"));
+      await runTransaction(firestore, async (transaction) => {
+        const userRef = doc(firestore, "users", username);
+        const partnerMatchRef = doc(firestore, "partners_matchmaking", username)
+        let userDoc = await transaction.get(userRef);
+        let userData = userDoc.data();
+        
+       await transaction.delete(partnerMatchRef);
+       transaction.update(userRef,{awaitingPartner: false, isMatchmaking: false})
+      })
+    return { addedToQueue: true, username };
+  } catch (e) {
+    return { e: e.message, message: "Error joining partner queue" };
+  }
+}
+
+
 async function signInUser(email, password) {
   const auth = getAuth();
   let user = null;
@@ -439,6 +459,7 @@ module.exports = {
   createNewUser,
   signInUser,
   signOutUser,
+  exitPartnerQueue,
   joinPartnerQueue,
   sendPartnerInvite,
   createTeam,

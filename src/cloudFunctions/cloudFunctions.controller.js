@@ -57,7 +57,11 @@ async function onPartnerMatchmaking(req, res) {
   const result = await service.joinPartnerQueue(user);
   res.status(200).send(result)
 }
-
+async function onCancelPartnerMatchmaking(req, res) {
+  let user = req.query.user;
+  const result = await service.exitPartnerQueue(user);
+  res.status(200).send(result)
+}
 async function onSelectedTeamMatchmaking(req, res) {
   res.status(200).send('Template successful')
 }
@@ -144,6 +148,7 @@ module.exports = {
   onSelectedTeamMatchmaking,
   onTeamMatchmaking,
   onCancelMatchmaking,
+  onCancelPartnerMatchmaking,
   playCard,
   registerUser,
   removeExpiredMatches,
