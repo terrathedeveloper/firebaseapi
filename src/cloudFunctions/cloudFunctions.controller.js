@@ -132,7 +132,10 @@ async function teamMatchmakingRedirect(req, res) {
   res.status(200).send('Template successful')
 }
 async function updateGameReadyCount(req, res) {
-  res.status(200).send('Template successful')
+  console.log('updatae tat game!');
+  const {gameLobbyId,user} = req.body;
+  const result = await service.setGameReady(gameLobbyId, user);
+  res.status(200).json(result)
 }
 async function updateLobbyReadyCount(req, res) {
   const {gameLobbyId,user} = req.body;
