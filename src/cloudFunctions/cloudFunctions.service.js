@@ -202,15 +202,24 @@ async function exitPartnerQueue(username) {
 async function signInUser(email, password) {
   const auth = getAuth();
   let user = null;
+  
   try {
     const userCred = await signInWithEmailAndPassword(auth, email, password);
-    if (userCred) {
+    if (userCred) {      
       const allUsersQuery = query(
         collection(firestore, "users"),
         where("email", "==", email)
       );
       const snapshots = await getDocs(allUsersQuery);
       user = snapshots.docs[0].data();
+      if(user.partner){
+        let teamsList = [user.username,user.partner].sort()
+        const myTeamRef = doc(firestore, "teams", `${teamsList[0]}+${teamsList[1]}`);
+        await deleteDoc(myTeamRef);
+        const myTeamMatchRef = doc(firestore, "teams_matchmaking", `${teamsList[0]}+${teamsList[1]}`);
+        await deleteDoc(myTeamMatchRef)
+        user.partner = null;
+      }
     }
     return user;
   } catch (e) {
@@ -395,9 +404,7 @@ async function onMatchStart(team1Id, team2Id, currentUser){
 
 async function onRandomTeamMatchmaking(user, userTeam, otherTeam) {
   try {
-
-
-    await runTransaction(firestore, async (transaction) => {
+      await runTransaction(firestore, async (transaction) => {
       const matchmakingRef = doc(firestore, "teams_matchmaking", userTeam);
       let matchmakingDoc = await transaction.get(matchmakingRef);
       let matchData = matchmakingDoc.data();
