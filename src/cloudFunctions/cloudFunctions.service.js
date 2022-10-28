@@ -352,9 +352,9 @@ async function onMatchStart(team1Id, team2Id, currentUser){
       const myTeam = team1Id.includes(currentUser)? team1Id :team2Id;
       const otherTeam = !team1Id.includes(currentUser)? team1Id :team2Id;
       const myTeamRef = doc(firestore, "teams", myTeam);
-      const otherTeamRef = doc(firestore, "teams", myTeam);
+      const otherTeamRef = doc(firestore, "teams", otherTeam);
       const myTeamMatchRef = doc(firestore, "teams_matchmaking", myTeam);
-      const otherTeamMatchRef = doc(firestore, "teams_matchmaking", myTeam);
+      const otherTeamMatchRef = doc(firestore, "teams_matchmaking", otherTeam);
 
       const myTeamJson = (await transaction.get(myTeamRef)).data()
       const otherTeamJson = (await transaction.get(otherTeamRef)).data()
