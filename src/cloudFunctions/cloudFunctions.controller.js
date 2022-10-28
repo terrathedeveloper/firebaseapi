@@ -113,7 +113,6 @@ async function sendPartnersRequest(req, res) {
 }
 async function signInUser(req, res) {
   const {email, password}=req.body;
-  console.log('signin',email, password)
   const result = await service.signInUser(email, password);
   res.status(200).json(result)
 }

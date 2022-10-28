@@ -210,15 +210,21 @@ async function signInUser(email, password) {
         collection(firestore, "users"),
         where("email", "==", email)
       );
+      
       const snapshots = await getDocs(allUsersQuery);
       user = snapshots.docs[0].data();
-      if(user.partner){
+      console.log(user);
+      if(user.partner){ 
+       
         let teamsList = [user.username,user.partner].sort()
         const myTeamRef = doc(firestore, "teams", `${teamsList[0]}+${teamsList[1]}`);
         await deleteDoc(myTeamRef);
         const myTeamMatchRef = doc(firestore, "teams_matchmaking", `${teamsList[0]}+${teamsList[1]}`);
         await deleteDoc(myTeamMatchRef)
+        console.log('username',user.username)
+        const userRef = doc(firestore, "users", user.username);
         user.partner = null;
+        await updateDoc(userRef,{partner:null, isMatchmaking:false, isOnline:true});
       }
     }
     return user;
