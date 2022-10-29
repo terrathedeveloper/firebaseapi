@@ -223,8 +223,10 @@ async function signInUser(email, password) {
         await deleteDoc(myTeamMatchRef)
         console.log('username',user.username)
         const userRef = doc(firestore, "users", user.username);
+        const partnerRef = doc(firestore, "users", user.partner);
         user.partner = null;
         await updateDoc(userRef,{partner:null, isMatchmaking:false, isOnline:true});
+        await updateDoc(partnerRef,{partner:null, isMatchmaking:false, isOnline:true});
       }
     }
     return user;
