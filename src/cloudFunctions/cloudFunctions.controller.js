@@ -81,7 +81,7 @@ async function onCancelMatchmaking(req, res) {
 async function playCard(req, res) {
   const {gameId, user, card}= req.body;
   const result = await service.handleCardPlay(gameId, user, card);
-  res.status(200).send('Template successful')
+  res.status(200).json(result)
 }
 async function registerUser(req, res) {
   console.log('here we are');

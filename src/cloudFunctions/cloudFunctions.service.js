@@ -773,6 +773,7 @@ async function handleCardPlay(gameId, user, card) {
     }
     return game;
   });
+  return {success:true}
 }
 function _cardValue(card) {
   if (card === "assets/images/cards/spade_two.png") {
