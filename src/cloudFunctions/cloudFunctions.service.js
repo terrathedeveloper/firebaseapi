@@ -15,7 +15,12 @@ const {
   arrayUnion,
   arrayRemove,
 } = require("firebase/firestore");
-const {getDatabase, ref, set} = require("firebase/database");
+const {
+  getDatabase,
+  ref,
+  set,
+  runTransaction: rtRunTransaction,
+} = require("firebase/database");
 const {
   getAuth,
   createUserWithEmailAndPassword,
@@ -82,9 +87,9 @@ async function createNewUser(userData, phoneNumber) {
   }
 }
 async function createTeam(user, partner) {
- // const matchmakingRef = db.ref('partners_matchmaking');
- // await matchmakingRef.child(user).remove()
- // await matchmakingRef.child(partner).remove()
+  // const matchmakingRef = db.ref('partners_matchmaking');
+  // await matchmakingRef.child(user).remove()
+  // await matchmakingRef.child(partner).remove()
   try {
     //const partnersQuery = query(collection(firestore,"partners_matchmaking"));
     await runTransaction(firestore, async (transaction) => {
@@ -95,8 +100,8 @@ async function createTeam(user, partner) {
 
       userDoc = userDoc.data();
       partnerDoc = partnerDoc.data();
-      console.log(userDoc.partner)
-      console.log(partnerDoc.partner)
+      console.log(userDoc.partner);
+      console.log(partnerDoc.partner);
 
       if (!userDoc.partner && !partnerDoc.partner) {
         console.log(userDoc.friends);
@@ -141,15 +146,13 @@ async function createTeam(user, partner) {
           matchmakingWith: null,
           playersReady: [],
         });
-       
 
         transaction.update(userRef, { partner: partner });
         transaction.update(partnerRef, { partner: user });
         await deleteDoc(doc(firestore, "partners_matchmaking", user));
         await deleteDoc(doc(firestore, "partners_matchmaking", partner));
-      }
-      else{
-        return {error:'Partner no longer available'}
+      } else {
+        return { error: "Partner no longer available" };
       }
     });
   } catch (e) {
@@ -166,7 +169,6 @@ async function joinPartnerQueue(username) {
       }
     );
 
-    
     /*const matchmakingRef = db.ref('partners_matchmaking');
     matchmakingRef.child(username).set({
         player: username,
@@ -180,53 +182,70 @@ async function joinPartnerQueue(username) {
 }
 
 async function exitPartnerQueue(username) {
-  console.log(username)
-    try {
-      //const partnersQuery = query(collection(firestore,"partners_matchmaking"));
-      await runTransaction(firestore, async (transaction) => {
-        const userRef = doc(firestore, "users", username);
-        const partnerMatchRef = doc(firestore, "partners_matchmaking", username)
-        let userDoc = await transaction.get(userRef);
-        let userData = userDoc.data();
-        
-       await transaction.delete(partnerMatchRef);
-       transaction.update(userRef,{awaitingPartner: false, isMatchmaking: false})
-      })
+  console.log(username);
+  try {
+    //const partnersQuery = query(collection(firestore,"partners_matchmaking"));
+    await runTransaction(firestore, async (transaction) => {
+      const userRef = doc(firestore, "users", username);
+      const partnerMatchRef = doc(firestore, "partners_matchmaking", username);
+      let userDoc = await transaction.get(userRef);
+      let userData = userDoc.data();
+
+      await transaction.delete(partnerMatchRef);
+      transaction.update(userRef, {
+        awaitingPartner: false,
+        isMatchmaking: false,
+      });
+    });
     return { addedToQueue: true, username };
   } catch (e) {
     return { e: e.message, message: "Error joining partner queue" };
   }
 }
 
-
 async function signInUser(email, password) {
   const auth = getAuth();
   let user = null;
-  
+
   try {
     const userCred = await signInWithEmailAndPassword(auth, email, password);
-    if (userCred) {      
+    if (userCred) {
       const allUsersQuery = query(
         collection(firestore, "users"),
         where("email", "==", email)
       );
-      
+
       const snapshots = await getDocs(allUsersQuery);
       user = snapshots.docs[0].data();
       console.log(user);
-      if(user.partner){ 
-       
-        let teamsList = [user.username,user.partner].sort()
-        const myTeamRef = doc(firestore, "teams", `${teamsList[0]}+${teamsList[1]}`);
+      if (user.partner) {
+        let teamsList = [user.username, user.partner].sort();
+        const myTeamRef = doc(
+          firestore,
+          "teams",
+          `${teamsList[0]}+${teamsList[1]}`
+        );
         await deleteDoc(myTeamRef);
-        const myTeamMatchRef = doc(firestore, "teams_matchmaking", `${teamsList[0]}+${teamsList[1]}`);
-        await deleteDoc(myTeamMatchRef)
-        console.log('username',user.username)
+        const myTeamMatchRef = doc(
+          firestore,
+          "teams_matchmaking",
+          `${teamsList[0]}+${teamsList[1]}`
+        );
+        await deleteDoc(myTeamMatchRef);
+        console.log("username", user.username);
         const userRef = doc(firestore, "users", user.username);
         const partnerRef = doc(firestore, "users", user.partner);
         user.partner = null;
-        await updateDoc(userRef,{partner:null, isMatchmaking:false, isOnline:true});
-        await updateDoc(partnerRef,{partner:null, isMatchmaking:false, isOnline:true});
+        await updateDoc(userRef, {
+          partner: null,
+          isMatchmaking: false,
+          isOnline: true,
+        });
+        await updateDoc(partnerRef, {
+          partner: null,
+          isMatchmaking: false,
+          isOnline: true,
+        });
       }
     }
     return user;
@@ -270,8 +289,6 @@ async function sendPartnerInvite(token, username, type) {
     return { e: e.message, message: "Error with partner request" };
   }
 }
-
-
 
 async function setFriendship(requestor, requested) {
   try {
@@ -347,39 +364,50 @@ async function removePartner(user) {
   }
 }
 
-async function onMatchStart(team1Id, team2Id, currentUser){
-  let teamsList = [team1Id,team2Id].sort()
+async function onMatchStart(team1Id, team2Id, currentUser) {
+  let teamsList = [team1Id, team2Id].sort();
   try {
     await runTransaction(firestore, async (transaction) => {
-      const myTeam = team1Id.includes(currentUser)? team1Id :team2Id;
-      const otherTeam = !team1Id.includes(currentUser)? team1Id :team2Id;
+      const myTeam = team1Id.includes(currentUser) ? team1Id : team2Id;
+      const otherTeam = !team1Id.includes(currentUser) ? team1Id : team2Id;
       const myTeamRef = doc(firestore, "teams", myTeam);
       const otherTeamRef = doc(firestore, "teams", otherTeam);
       const myTeamMatchRef = doc(firestore, "teams_matchmaking", myTeam);
       const otherTeamMatchRef = doc(firestore, "teams_matchmaking", otherTeam);
 
-      const myTeamJson = (await transaction.get(myTeamRef)).data()
-      const otherTeamJson = (await transaction.get(otherTeamRef)).data()
-      const myTeamMatchJson = (await transaction.get(myTeamMatchRef)).data()
-      const otherTeamMatchJson = (await transaction.get(otherTeamMatchRef)).data()
+      const myTeamJson = (await transaction.get(myTeamRef)).data();
+      const otherTeamJson = (await transaction.get(otherTeamRef)).data();
+      const myTeamMatchJson = (await transaction.get(myTeamMatchRef)).data();
+      const otherTeamMatchJson = (
+        await transaction.get(otherTeamMatchRef)
+      ).data();
 
       //console.log(myTeamJson)
       //console.log(otherTeamJson)
-     transaction.update(myTeamRef,{matchmakingAvailable:false, isMatchmaking:false})
-      transaction.update(otherTeamRef,{matchmakingAvailable:false, isMatchmaking:false})
-      
-      console.log(teamsList)
-      transaction.set(doc(firestore, "games_lobby", `${teamsList[0]}+${teamsList[1]}`), {
-        randomFirstPlayer: 0,
-        randomSecondPlayer: 0,
-        randomFirstTeam: 0,
-        gameReadyCount: [],
-        lobbyReadyCount: [],
-        id: `${teamsList[0]}+${teamsList[1]}`,
-        teams: teamsList,
-        players:[],
-        dateCreated: serverTimestamp(),
-      })
+      transaction.update(myTeamRef, {
+        matchmakingAvailable: false,
+        isMatchmaking: false,
+      });
+      transaction.update(otherTeamRef, {
+        matchmakingAvailable: false,
+        isMatchmaking: false,
+      });
+
+      console.log(teamsList);
+      transaction.set(
+        doc(firestore, "games_lobby", `${teamsList[0]}+${teamsList[1]}`),
+        {
+          randomFirstPlayer: 0,
+          randomSecondPlayer: 0,
+          randomFirstTeam: 0,
+          gameReadyCount: [],
+          lobbyReadyCount: [],
+          id: `${teamsList[0]}+${teamsList[1]}`,
+          teams: teamsList,
+          players: [],
+          dateCreated: serverTimestamp(),
+        }
+      );
       /*const matchmakingRef = doc(firestore, "teams_matchmaking", userTeam);
       let matchmakingDoc = await transaction.get(matchmakingRef);
       let matchData = matchmakingDoc.data();
@@ -412,7 +440,7 @@ async function onMatchStart(team1Id, team2Id, currentUser){
 
 async function onRandomTeamMatchmaking(user, userTeam, otherTeam) {
   try {
-      await runTransaction(firestore, async (transaction) => {
+    await runTransaction(firestore, async (transaction) => {
       const matchmakingRef = doc(firestore, "teams_matchmaking", userTeam);
       let matchmakingDoc = await transaction.get(matchmakingRef);
       let matchData = matchmakingDoc.data();
@@ -471,59 +499,311 @@ async function onCancelTeamMatchmaking(user, partner) {
 }
 
 async function setPlayerReady(gameLobbyId, user) {
- 
   try {
     await runTransaction(firestore, async (transaction) => {
       const gameLobbyRef = doc(firestore, "games_lobby", gameLobbyId);
       const game = await transaction.get(gameLobbyRef);
-      const team1Ref = doc(firestore,"teams", game.data().teams[0])
-      const team2Ref = doc(firestore,"teams", game.data().teams[1])
-      
-      console.log(game.data().teams)
+      const team1Ref = doc(firestore, "teams", game.data().teams[0]);
+      const team2Ref = doc(firestore, "teams", game.data().teams[1]);
+
+      console.log(game.data().teams);
       transaction.update(gameLobbyRef, {
         lobbyReadyCount: arrayUnion(user),
-      })
+      });
       transaction.update(team1Ref, {
         inMatch: true,
-      })
+      });
       transaction.update(team2Ref, {
         inMatch: true,
-      })
+      });
     });
     return { success: true };
   } catch (e) {
     console.log(e.message);
-    return { e: e.message, message: "Error with setting player to lobby ready" };
+    return {
+      e: e.message,
+      message: "Error with setting player to lobby ready",
+    };
   }
 }
 async function setGameReady(gameLobbyId, user) {
- console.log('set game ready!');
+  console.log("set game ready!");
   try {
     await runTransaction(firestore, async (transaction) => {
       const gameLobbyRef = doc(firestore, "games_lobby", gameLobbyId);
       const game = await transaction.get(gameLobbyRef);
-      const team1Ref = doc(firestore,"teams", game.data().teams[0])
-      const team2Ref = doc(firestore,"teams", game.data().teams[1])
-      
-      console.log(game.data().teams)
+      const team1Ref = doc(firestore, "teams", game.data().teams[0]);
+      const team2Ref = doc(firestore, "teams", game.data().teams[1]);
+
+      console.log(game.data().teams);
       transaction.update(gameLobbyRef, {
         gameReadyCount: arrayUnion(user),
-      })
+      });
       transaction.update(team1Ref, {
         inMatch: true,
-      })
+      });
       transaction.update(team2Ref, {
         inMatch: true,
-      })
+      });
     });
     return { success: true };
   } catch (e) {
     console.log(e.message);
-    return { e: e.message, message: "Error with setting player to lobby ready" };
+    return {
+      e: e.message,
+      message: "Error with setting player to lobby ready",
+    };
   }
 }
+async function buildGameObj(gameId, user) {
 
+  const gameRef = ref(db, `/games/money`);
+  console.log(gameId, user);
+  //console.log(gameRef)
+  let list = [];
+  try {
+    await set(gameRef, { list: false });
+  } catch (e) {
+    console.log(e);
+  }
+
+  return { gameId };
+}
+async function handleCardPlay(gameId, user, card) {
+  const cardsHeirarchy = [
+    "spade_two",
+    "a",
+    "k",
+    "q",
+    "j",
+    "ten",
+    "nine",
+    "eight",
+    "seven",
+    "six",
+    "five",
+    "four",
+    "three",
+    "two",
+  ];
+  console.log(gameId, user, card);
+  //const db = getDatabase(app)
+
+  const db = getDatabase();
+  const gameRef = ref(db, `/games/${gameId}`);
+
+  rtRunTransaction(gameRef, (game) => {
+    //console.log(game)
+    if (game) {
+      if (game.cardData) {
+        game.cardData.push({ [user]: card });
+      } else {
+        game.cardData = [{ [user]: card }];
+      }
+      if (game.cardsOnField) {
+        game.cardsOnField.push(card);
+      } else {
+        game.cardsOnField = [card];
+      }
+      if (game.cardsPlayed) {
+        game.cardsPlayed.push(card);
+      } else {
+        game.cardsPlayed = [card];
+      }
+
+      console.log(game);
+      game.currentSuit = _getCardSuit(game.cardsOnField[0]);
+      console.log(game.currentSuit);
+      let cardPlayedSuit = _getCardSuit(card);
+      game.jokerSuit = game.cardsOnField.some(
+        (card) => card.indexOf("joker") !== -1
+      );
+      console.log(game.currentSuit);
+      if (game.currentSuit) {
+        if (
+          !(game.currentSuit === "joker" && cardPlayedSuit === "spade") ||
+          !(cardPlayedSuit === "joker" && game.currentSuit === "spade")
+        ) {
+          switch (user) {
+            case game.teams[0].player1: {
+              let handContainsSuit = _containsSuit(
+                game.teams[0].player1Cards,
+                game.currentSuit
+              );
+              if (handContainsSuit) {
+                game.teams[0].booksCount = game.teams[0].booksCount - 4;
+                game.teams[1].booksCount = game.teams[1].booksCount + 4;
+                game.renegeText = `${user} has reneged and\n lost 4 books for their team!`;
+              }
+              console.log("this is it", game.teams[0].player1, game.renegeText);
+              break;
+            }
+            case game.teams[0].player2: {
+              let handContainsSuit = _containsSuit(
+                game.teams[0].player2Cards,
+                game.currentSuit
+              );
+              if (handContainsSuit) {
+                game.teams[0].booksCount = game.teams[0].booksCount - 4;
+                game.teams[1].booksCount = game.teams[1].booksCount + 4;
+                game.renegeText = `${user} has reneged and\n lost 4 books for their team!`;
+              }
+              console.log("this is it", game.teams[0].player2);
+              break;
+            }
+            case game.teams[1].player1: {
+              let handContainsSuit = _containsSuit(
+                game.teams[1].player1Cards,
+                game.currentSuit
+              );
+              if (handContainsSuit) {
+                game.teams[1].booksCount = game.teams[1].booksCount - 4;
+                game.teams[0].booksCount = game.teams[0].booksCount + 4;
+                game.renegeText = `${user} has reneged and\n lost 4 books for their team!`;
+              }
+              console.log("this is it", game.teams[1].player1, game.renegeText);
+              break;
+            }
+            case game.teams[1].player2: {
+              let handContainsSuit = _containsSuit(
+                game.teams[1].player2Cards,
+                game.currentSuit
+              );
+              if (handContainsSuit) {
+                console.log();
+                game.teams[1].booksCount = game.teams[1].booksCount - 4;
+                game.teams[0].booksCount = game.teams[0].booksCount + 4;
+                game.renegeText = `${user} has reneged and\n lost 4 books for their team!`;
+              }
+              console.log(
+                "this is it",
+                handContainsSuit,
+                game.teams[1].player2,
+                game.teams[0].booksCount
+              );
+              break;
+            }
+            default:
+              break;
+          }
+        }
+        const idx = game.turnOrder.indexOf(user);
+        game.currentTurn = game.turnOrder[idx === 3 ? 0 : idx + 1];
+        console.log('cards on the filed', game.cardsOnField)
+        if (game.cardsOnField.length === 4) {
+          
+          let currentSuit = game.currentSuit;
+          let index = 0;
+          if (!game.jokerSuit) {
+            currentSuit = _containsSuit(game.cardsOnField, "spade")
+              ? "spade"
+              : currentSuit;
+
+            const sameSuitCards = game.cardsOnField.filter(
+              (card) => _getCardSuit(card) == currentSuit
+            );
+            const cardsValues = sameSuitCards.map((card) => _cardValue(card));
+
+            let highestCard = "";
+            for (let cardHeir of cardsHeirarchy) {
+              if (cardsValues.includes(cardHeir)) {
+                highestCard = cardHeir;
+                break;
+              }
+            }
+            console.log("winning card", highestCard);
+            if (highestCard !== "spade_two") {
+              index = game.cardsOnField.indexOf(
+                `assets/images/cards/${currentSuit}_${highestCard}.png`
+              );
+            } else {
+              index = game.cardsOnField.indexOf(
+                `assets/images/cards/spade_two.png`
+              );
+            }
+            //console.log('high card shuffle')
+            //console.log(game.cardsOnField);
+            //console.log(index)
+          } else {
+            const cardsNamed = game.cardsOnField.map((card) => card.split("/")[3].split(".")[0]);
+            console.log("jokes", cardsNamed);
+            let isBigJoker = cardsNamed.includes("joker_big");
+            console.log(isBigJoker);
+            index = game.cardsOnField.indexOf(
+              isBigJoker
+                ? `assets/images/cards/joker_big.png`
+                : `assets/images/cards/joker_little.png`
+            );
+          }
+          const winner = game.turnOrder[index];
+          console.log(`${winner} wins! with ${game.cardsOnField[index]}`);
+          switch (winner) {
+            case game.teams[0].player1:
+            case game.teams[0].player2: {
+              game.teams[0].booksCount++;
+              break;
+            }
+            case game.teams[1].player1:
+            case game.teams[1].player2: {
+              game.teams[1].booksCount++;
+              break;
+            }
+            default:
+              break;
+          }
+          game.roundWinner = winner;
+          game.turnWinner = winner;
+          game.jokerSuit = false;
+          game.currentTurn = null;
+          game.currentSuit = "";
+          game.turnsCount++;
+        }
+      }
+
+      /*if (post.stars && post.stars[uid]) {
+        post.starCount--;
+        post.stars[uid] = null;
+      } else {
+        post.starCount++;
+        if (!post.stars) {
+          post.stars = {};
+        }
+        post.stars[uid] = true;
+      }*/
+    }
+    return game;
+  });
+}
+function _cardValue(card) {
+  if (card === "assets/images/cards/spade_two.png") {
+    return "spade_two";
+  }
+  let splitCardStr = card.split("/")[3].split("_")[1].split(".")[0];
+  return splitCardStr;
+}
+function _getCardSuit(card) {
+  console.log(card);
+  let splitCard = card.split("/");
+  let cardSuitSplit = splitCard[3].split("_");
+  return cardSuitSplit[0];
+}
+function _containsSuit(hand, suit) {
+  let hasSuit = false;
+  console.log("hands an dsuits");
+  console.log(hand);
+  console.log(suit);
+  if (suit === "spade" || suit === "joker") {
+    hasSuit = hand.some(
+      (card) => card.indexOf("spade") !== -1 || card.indexOf("joker") !== -1
+    );
+  } else {
+    hasSuit = hand.some((card) => card.indexOf(suit) !== -1);
+  }
+  console.log(hasSuit);
+  return hasSuit;
+}
 module.exports = {
+  buildGameObj,
   createNewUser,
   signInUser,
   signOutUser,
@@ -537,5 +817,6 @@ module.exports = {
   onCancelTeamMatchmaking,
   setPlayerReady,
   setGameReady,
-  onMatchStart
+  onMatchStart,
+  handleCardPlay,
 };

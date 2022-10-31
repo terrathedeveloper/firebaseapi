@@ -79,6 +79,8 @@ async function onCancelMatchmaking(req, res) {
   res.status(200).json(result)
 }
 async function playCard(req, res) {
+  const {gameId, user, card}= req.body;
+  const result = await service.handleCardPlay(gameId, user, card);
   res.status(200).send('Template successful')
 }
 async function registerUser(req, res) {
@@ -142,12 +144,19 @@ async function updateLobbyReadyCount(req, res) {
   res.status(200).json(result)
 }
 
+async function initGame(req,res){
+  const {gameId,user} = req.body;
+  const result = await service.buildGameObj(gameId, user);
+  res.status(200).json(result)
+}
+
 module.exports = {
   addFriend,
   endRound,
   gameLobbyQuit,
   getRtcToken,
   handlePartnersTransaction,
+  initGame,
   onPartnerMatchmaking,
   onSelectedTeamMatchmaking,
   onTeamMatchmaking,
