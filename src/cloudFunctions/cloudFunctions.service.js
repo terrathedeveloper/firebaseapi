@@ -592,7 +592,8 @@ async function handleCardPlay(gameId, user, card) {
   const db = getDatabase();
   const gameRef = ref(db, `/games/${gameId}`);
 
-  rtRunTransaction(gameRef, (game) => {
+  try {
+    await rtRunTransaction(gameRef, (game) => {
     //console.log(game)
     if (game) {
       if (game.cardData) {
@@ -760,19 +761,13 @@ async function handleCardPlay(gameId, user, card) {
         }
       }
 
-      /*if (post.stars && post.stars[uid]) {
-        post.starCount--;
-        post.stars[uid] = null;
-      } else {
-        post.starCount++;
-        if (!post.stars) {
-          post.stars = {};
-        }
-        post.stars[uid] = true;
-      }*/
     }
     return game;
   });
+}catch(e){
+  console.log(`error: ${e.message}`)
+  return {error:e.message}
+}
   return {success:true}
 }
 function _cardValue(card) {
