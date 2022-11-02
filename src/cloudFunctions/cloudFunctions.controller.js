@@ -39,6 +39,12 @@ async function addFriend(req, res) {
 async function endRound(req, res) {
   res.status(200).send('Template successful')
 }
+async function endTrick(req, res) {
+  const {gameId} = req.body;
+  console.log(gameId);
+  const result= service.endTrick(gameId);
+  res.status(200).send('Template successful')
+}
 async function gameLobbyQuit(req, res) {
   res.status(200).send('Template successful')
 }
@@ -154,6 +160,7 @@ async function initGame(req,res){
 module.exports = {
   addFriend,
   endRound,
+  endTrick,
   gameLobbyQuit,
   getRtcToken,
   handlePartnersTransaction,

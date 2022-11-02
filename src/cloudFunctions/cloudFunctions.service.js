@@ -32,6 +32,7 @@ var admin = require("firebase-admin");
 
 var serviceAccount = require("../../thebigjokerprod-firebase-adminsdk-7o9u8-ab68508be0.json");
 
+
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://thebigjokerprod-default-rtdb.firebaseio.com",
@@ -788,9 +789,61 @@ function _containsSuit(hand, suit) {
   console.log(hasSuit);
   return hasSuit;
 }
+
+async function endTrick(gameId){
+  const db = getDatabase();
+  console.log(gameId)
+  const gameRef = ref(db, `/games/${gameId}`);
+
+  try {
+    await rtRunTransaction(gameRef, (game) => {
+      if(game){
+        let winnerIndex = game.turnOrder.indexOf(game.roundWinner);
+        let turnWinner = game.roundWinner;
+        switch (winnerIndex) {
+          case 1:
+            game.turnOrder = [
+              turnWinner,
+              game.turnOrder[2],
+              game.turnOrder[3],
+              game.turnOrder[0],
+            ];
+            break;
+          case 2:
+            game.turnOrder = [
+              turnWinner,
+              game.turnOrder[3],
+              game.turnOrder[0],
+              game.turnOrder[1],
+            ];
+            break;
+          case 3:
+            game.turnOrder = [
+              turnWinner,
+              game.turnOrder[0],
+              game.turnOrder[1],
+              game.turnOrder[2],
+            ];
+            break;
+          default:
+            break;
+        }
+        game.cardsOnField = [];
+        game.currentTurn = turnWinner;
+        game.roundWinner="";
+        game.turnWinner="";
+      }
+      return game
+    })
+  }catch(e){
+    return {error:e.message};
+  }
+  return {success:true}
+}
 module.exports = {
   buildGameObj,
   createNewUser,
+  endTrick,
   signInUser,
   signOutUser,
   exitPartnerQueue,
