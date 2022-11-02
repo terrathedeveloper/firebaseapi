@@ -384,16 +384,17 @@ async function onMatchStart(team1Id, team2Id, currentUser) {
 
       //console.log(myTeamJson)
       //console.log(otherTeamJson)
-      transaction.update(myTeamRef, {
+      await transaction.update(myTeamRef, {
         matchmakingAvailable: false,
         isMatchmaking: false,
       });
-      transaction.update(otherTeamRef, {
+      await transaction.update(otherTeamRef, {
         matchmakingAvailable: false,
         isMatchmaking: false,
       });
 
-      console.log(teamsList);
+      await transaction.delete(myTeamMatchRef);
+      await transaction.delete(otherTeamMatchRef);
       transaction.set(
         doc(firestore, "games_lobby", `${teamsList[0]}+${teamsList[1]}`),
         {
@@ -408,28 +409,7 @@ async function onMatchStart(team1Id, team2Id, currentUser) {
           dateCreated: serverTimestamp(),
         }
       );
-      /*const matchmakingRef = doc(firestore, "teams_matchmaking", userTeam);
-      let matchmakingDoc = await transaction.get(matchmakingRef);
-      let matchData = matchmakingDoc.data();
-      if (matchData) {
-        transaction.update(doc(firestore, "teams_matchmaking", userTeam), {
-          players: arrayUnion(user),
-          timestamp: serverTimestamp(),
-        });
-      } else {
-        transaction.set(doc(firestore, "teams_matchmaking", userTeam), {
-          players: [user],
-          timestamp: serverTimestamp(),
-          teamId: userTeam,
-          matchingWith: otherTeam != null ? otherTeam : "random",
-        });
-      }
-      const teamRef = doc(firestore, "teams", userTeam);
-      transaction.update(teamRef, {
-        playersReady: arrayUnion(user),
-        isMatchmaking: true,
-        matchmakingWith: otherTeam != null ? otherTeam : "random",
-      });*/
+     
     });
     return { success: true };
   } catch (e) {
