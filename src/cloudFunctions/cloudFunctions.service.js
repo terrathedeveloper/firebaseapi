@@ -556,7 +556,6 @@ async function setGameReady(gameLobbyId, user) {
   }
 }
 async function buildGameObj(gameId, user) {
-
   const gameRef = ref(db, `/games/money`);
   console.log(gameId, user);
   //console.log(gameRef)
@@ -594,181 +593,192 @@ async function handleCardPlay(gameId, user, card) {
 
   try {
     await rtRunTransaction(gameRef, (game) => {
-    //console.log(game)
-    if (game) {
-      if (game.cardData) {
-        game.cardData.push({ [user]: card });
-      } else {
-        game.cardData = [{ [user]: card }];
-      }
-      if (game.cardsOnField) {
-        game.cardsOnField.push(card);
-      } else {
-        game.cardsOnField = [card];
-      }
-      if (game.cardsPlayed) {
-        game.cardsPlayed.push(card);
-      } else {
-        game.cardsPlayed = [card];
-      }
-
-      console.log(game);
-      game.currentSuit = _getCardSuit(game.cardsOnField[0]);
-      console.log(game.currentSuit);
-      let cardPlayedSuit = _getCardSuit(card);
-      game.jokerSuit = game.cardsOnField.some(
-        (card) => card.indexOf("joker") !== -1
-      );
-      console.log(game.currentSuit);
-      if (game.currentSuit) {
-        if (
-          !(game.currentSuit === "joker" && cardPlayedSuit === "spade") ||
-          !(cardPlayedSuit === "joker" && game.currentSuit === "spade")
-        ) {
-          switch (user) {
-            case game.teams[0].player1: {
-              let handContainsSuit = _containsSuit(
-                game.teams[0].player1Cards,
-                game.currentSuit
-              );
-              if (handContainsSuit) {
-                game.teams[0].booksCount = game.teams[0].booksCount - 4;
-                game.teams[1].booksCount = game.teams[1].booksCount + 4;
-                game.renegeText = `${user} has reneged and\n lost 4 books for their team!`;
-              }
-              console.log("this is it", game.teams[0].player1, game.renegeText);
-              break;
-            }
-            case game.teams[0].player2: {
-              let handContainsSuit = _containsSuit(
-                game.teams[0].player2Cards,
-                game.currentSuit
-              );
-              if (handContainsSuit) {
-                game.teams[0].booksCount = game.teams[0].booksCount - 4;
-                game.teams[1].booksCount = game.teams[1].booksCount + 4;
-                game.renegeText = `${user} has reneged and\n lost 4 books for their team!`;
-              }
-              console.log("this is it", game.teams[0].player2);
-              break;
-            }
-            case game.teams[1].player1: {
-              let handContainsSuit = _containsSuit(
-                game.teams[1].player1Cards,
-                game.currentSuit
-              );
-              if (handContainsSuit) {
-                game.teams[1].booksCount = game.teams[1].booksCount - 4;
-                game.teams[0].booksCount = game.teams[0].booksCount + 4;
-                game.renegeText = `${user} has reneged and\n lost 4 books for their team!`;
-              }
-              console.log("this is it", game.teams[1].player1, game.renegeText);
-              break;
-            }
-            case game.teams[1].player2: {
-              let handContainsSuit = _containsSuit(
-                game.teams[1].player2Cards,
-                game.currentSuit
-              );
-              if (handContainsSuit) {
-                console.log();
-                game.teams[1].booksCount = game.teams[1].booksCount - 4;
-                game.teams[0].booksCount = game.teams[0].booksCount + 4;
-                game.renegeText = `${user} has reneged and\n lost 4 books for their team!`;
-              }
-              console.log(
-                "this is it",
-                handContainsSuit,
-                game.teams[1].player2,
-                game.teams[0].booksCount
-              );
-              break;
-            }
-            default:
-              break;
-          }
+      //console.log(game)
+      if (game) {
+        if (game.cardData) {
+          game.cardData.push({ [user]: card });
+        } else {
+          game.cardData = [{ [user]: card }];
         }
-        const idx = game.turnOrder.indexOf(user);
-        game.currentTurn = game.turnOrder[idx === 3 ? 0 : idx + 1];
-        console.log('cards on the filed', game.cardsOnField)
-        if (game.cardsOnField.length === 4) {
-          
-          let currentSuit = game.currentSuit;
-          let index = 0;
-          if (!game.jokerSuit) {
-            currentSuit = _containsSuit(game.cardsOnField, "spade")
-              ? "spade"
-              : currentSuit;
+        if (game.cardsOnField) {
+          game.cardsOnField.push(card);
+        } else {
+          game.cardsOnField = [card];
+        }
+        if (game.cardsPlayed) {
+          game.cardsPlayed.push(card);
+        } else {
+          game.cardsPlayed = [card];
+        }
 
-            const sameSuitCards = game.cardsOnField.filter(
-              (card) => _getCardSuit(card) == currentSuit
-            );
-            const cardsValues = sameSuitCards.map((card) => _cardValue(card));
+        game.currentSuit = _getCardSuit(game.cardsOnField[0]);
+        let cardPlayedSuit = _getCardSuit(card);
+        game.jokerSuit = game.cardsOnField.some(
+          (card) => card.indexOf("joker") !== -1
+        );
+        console.log(game.currentSuit);
+        if (game.currentSuit) {
+          console.log('currentsuit',game.currentSuit);
+          console.log('cardPlayedsuit', cardPlayedSuit);
+     
 
-            let highestCard = "";
-            for (let cardHeir of cardsHeirarchy) {
-              if (cardsValues.includes(cardHeir)) {
-                highestCard = cardHeir;
+          let spadesAndJokersSame =  (game.currentSuit === "joker" && cardPlayedSuit === "spade") ||
+          (cardPlayedSuit === "joker" && game.currentSuit === "spade")
+          console.log(game.currentSuit != cardPlayedSuit && !spadesAndJokersSame);
+          //if currentSuit != cardPlayedSuit excluding jokers and spades
+          if(game.currentSuit != cardPlayedSuit && !spadesAndJokersSame)
+         {
+            switch (user) {
+              case game.teams[0].player1: {
+                let handContainsSuit = _containsSuit(
+                  game.teams[0].player1Cards,
+                  game.currentSuit
+                );
+                if (handContainsSuit) {
+                  game.teams[0].booksCount = game.teams[0].booksCount - 4;
+                  game.teams[1].booksCount = game.teams[1].booksCount + 4;
+                  game.renegeText = `${user} has reneged and\n lost 4 books for their team!`;
+                }
+                console.log(
+                  "this is it",
+                  game.teams[0].player1,
+                  game.renegeText
+                );
                 break;
               }
+              case game.teams[0].player2: {
+                let handContainsSuit = _containsSuit(
+                  game.teams[0].player2Cards,
+                  game.currentSuit
+                );
+                if (handContainsSuit) {
+                  game.teams[0].booksCount = game.teams[0].booksCount - 4;
+                  game.teams[1].booksCount = game.teams[1].booksCount + 4;
+                  game.renegeText = `${user} has reneged and\n lost 4 books for their team!`;
+                }
+                console.log("this is it", game.teams[0].player2);
+                break;
+              }
+              case game.teams[1].player1: {
+                let handContainsSuit = _containsSuit(
+                  game.teams[1].player1Cards,
+                  game.currentSuit
+                );
+                if (handContainsSuit) {
+                  game.teams[1].booksCount = game.teams[1].booksCount - 4;
+                  game.teams[0].booksCount = game.teams[0].booksCount + 4;
+                  game.renegeText = `${user} has reneged and\n lost 4 books for their team!`;
+                }
+                console.log(
+                  "this is it",
+                  game.teams[1].player1,
+                  game.renegeText
+                );
+                break;
+              }
+              case game.teams[1].player2: {
+                let handContainsSuit = _containsSuit(
+                  game.teams[1].player2Cards,
+                  game.currentSuit
+                );
+                if (handContainsSuit) {
+                  console.log();
+                  game.teams[1].booksCount = game.teams[1].booksCount - 4;
+                  game.teams[0].booksCount = game.teams[0].booksCount + 4;
+                  game.renegeText = `${user} has reneged and\n lost 4 books for their team!`;
+                }
+                console.log(
+                  "this is it",
+                  handContainsSuit,
+                  game.teams[1].player2,
+                  game.teams[0].booksCount
+                );
+                break;
+              }
+              default:
+                break;
             }
-            console.log("winning card", highestCard);
-            if (highestCard !== "spade_two") {
-              index = game.cardsOnField.indexOf(
-                `assets/images/cards/${currentSuit}_${highestCard}.png`
+          }
+          const idx = game.turnOrder.indexOf(user);
+          game.currentTurn = game.turnOrder[idx === 3 ? 0 : idx + 1];
+          if (game.cardsOnField.length === 4) {
+            let currentSuit = game.currentSuit;
+            let index = 0;
+            if (!game.jokerSuit) {
+              currentSuit = _containsSuit(game.cardsOnField, "spade")
+                ? "spade"
+                : currentSuit;
+
+              const sameSuitCards = game.cardsOnField.filter(
+                (card) => _getCardSuit(card) == currentSuit
               );
+              const cardsValues = sameSuitCards.map((card) => _cardValue(card));
+
+              let highestCard = "";
+              for (let cardHeir of cardsHeirarchy) {
+                if (cardsValues.includes(cardHeir)) {
+                  highestCard = cardHeir;
+                  break;
+                }
+              }
+              console.log("winning card", highestCard);
+              if (highestCard !== "spade_two") {
+                index = game.cardsOnField.indexOf(
+                  `assets/images/cards/${currentSuit}_${highestCard}.png`
+                );
+              } else {
+                index = game.cardsOnField.indexOf(
+                  `assets/images/cards/spade_two.png`
+                );
+              }
+              //console.log('high card shuffle')
+              //console.log(game.cardsOnField);
+              //console.log(index)
             } else {
+              const cardsNamed = game.cardsOnField.map(
+                (card) => card.split("/")[3].split(".")[0]
+              );
+              console.log("jokes", cardsNamed);
+              let isBigJoker = cardsNamed.includes("joker_big");
+              console.log(isBigJoker);
               index = game.cardsOnField.indexOf(
-                `assets/images/cards/spade_two.png`
+                isBigJoker
+                  ? `assets/images/cards/joker_big.png`
+                  : `assets/images/cards/joker_little.png`
               );
             }
-            //console.log('high card shuffle')
-            //console.log(game.cardsOnField);
-            //console.log(index)
-          } else {
-            const cardsNamed = game.cardsOnField.map((card) => card.split("/")[3].split(".")[0]);
-            console.log("jokes", cardsNamed);
-            let isBigJoker = cardsNamed.includes("joker_big");
-            console.log(isBigJoker);
-            index = game.cardsOnField.indexOf(
-              isBigJoker
-                ? `assets/images/cards/joker_big.png`
-                : `assets/images/cards/joker_little.png`
-            );
-          }
-          const winner = game.turnOrder[index];
-          console.log(`${winner} wins! with ${game.cardsOnField[index]}`);
-          switch (winner) {
-            case game.teams[0].player1:
-            case game.teams[0].player2: {
-              game.teams[0].booksCount++;
-              break;
+            const winner = game.turnOrder[index];
+            console.log(`${winner} wins! with ${game.cardsOnField[index]}`);
+            switch (winner) {
+              case game.teams[0].player1:
+              case game.teams[0].player2: {
+                game.teams[0].booksCount++;
+                break;
+              }
+              case game.teams[1].player1:
+              case game.teams[1].player2: {
+                game.teams[1].booksCount++;
+                break;
+              }
+              default:
+                break;
             }
-            case game.teams[1].player1:
-            case game.teams[1].player2: {
-              game.teams[1].booksCount++;
-              break;
-            }
-            default:
-              break;
+            game.roundWinner = winner;
+            game.turnWinner = winner;
+            game.jokerSuit = false;
+            game.currentTurn = null;
+            game.currentSuit = "";
+            game.turnsCount++;
           }
-          game.roundWinner = winner;
-          game.turnWinner = winner;
-          game.jokerSuit = false;
-          game.currentTurn = null;
-          game.currentSuit = "";
-          game.turnsCount++;
         }
       }
-
-    }
-    return game;
-  });
-}catch(e){
-  console.log(`error: ${e.message}`)
-  return {error:e.message}
-}
-  return {success:true}
+      return game;
+    });
+  } catch (e) {
+    console.log(`error: ${e.message}`);
+    return { error: e.message };
+  }
+  return { success: true };
 }
 function _cardValue(card) {
   if (card === "assets/images/cards/spade_two.png") {

@@ -80,6 +80,7 @@ async function onCancelMatchmaking(req, res) {
 }
 async function playCard(req, res) {
   const {gameId, user, card}= req.body;
+  console.log('input', gameId, user, card)
   const result = await service.handleCardPlay(gameId, user, card);
   res.status(200).json(result)
 }
