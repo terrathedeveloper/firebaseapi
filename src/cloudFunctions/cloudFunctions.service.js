@@ -849,6 +849,8 @@ async function endTrick(gameId){
         game.currentTurn = turnWinner;
         game.roundWinner="";
         game.turnWinner="";
+
+
       }
       return game
     })
@@ -857,9 +859,51 @@ async function endTrick(gameId){
   }
   return {success:true}
 }
+
+async function calculateScore(gameId){
+  const db = getDatabase();
+  console.log(gameId)
+  const gameRef = ref(db, `/games/${gameId}`);
+
+  try {
+    await rtRunTransaction(gameRef, (game) => {
+      if(game){
+        _calculateTeamScore(game.teams[0]);
+        _calculateTeamScore(game.teams[1]);
+        game.newRoundAcceptCount = 0;
+        game.roundFinished = true;
+        game.currentTurn = '';
+      }
+      return game;
+    });
+  }catch(e){
+    return {error: e.message}  
+  }
+  return {success:true}
+}
+function _calculateTeamScore(team){
+  if (team.booksCount == team.combinedBid) {
+    team.score = (team.booksCount * 10) + team.score;
+  }
+  if (team.booksCount > team.combinedBid) {
+    let extraBooks = team.booksCount - team.combinedBid;
+    let roundScore = (team.combinedBid * 10) + extraBooks;
+    team.score = team.score + roundScore;
+  }
+  if (team.booksCount < team.combinedBid) {
+    let roundScore = team.combinedBid * -10;
+    team.score = team.score + roundScore;
+  }
+
+  if (team.combinedBid == 10 && team.booksCount >= 10) {
+    let extraBooks = team.booksCount - team.combinedBid;
+    team.score = team.score + 200 + extraBooks;
+  }
+}
 module.exports = {
   buildGameObj,
   createNewUser,
+  calculateScore,
   endTrick,
   signInUser,
   signOutUser,

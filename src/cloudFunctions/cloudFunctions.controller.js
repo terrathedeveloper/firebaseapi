@@ -37,13 +37,16 @@ async function addFriend(req, res) {
   return res.status(200).json(result)
 }
 async function endRound(req, res) {
-  res.status(200).send('Template successful')
+  const {gameId} = req.body;
+  console.log(gameId);
+  const result = service.calculateScore(gameId)
+  res.status(200).json(result)
 }
 async function endTrick(req, res) {
   const {gameId} = req.body;
   console.log(gameId);
   const result= service.endTrick(gameId);
-  res.status(200).send('Template successful')
+  res.status(200).json(result)
 }
 async function gameLobbyQuit(req, res) {
   res.status(200).send('Template successful')
