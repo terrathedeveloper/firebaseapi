@@ -553,14 +553,8 @@ async function buildGameObj(gameId, user) {
   return { gameId };
 }
 async function handleCardPlay(gameId, user, card) {
-  
-  console.log(gameId, user, card);
-  //const db = getDatabase(app)
-
   const db = getDatabase();
   const gameRef = ref(db, `/games/${gameId}`);
-
-  
 
   try {
     await rtRunTransaction(gameRef, (game) => {
@@ -602,7 +596,6 @@ async function handleCardPlay(gameId, user, card) {
         game.jokerSuit = game.cardsOnField.some(
           (card) => card.indexOf("joker") !== -1
         );
-        console.log(game.currentSuit);
         if (game.currentSuit) {
           console.log('currentsuit',game.currentSuit);
           console.log('cardPlayedsuit', cardPlayedSuit);
@@ -625,11 +618,6 @@ async function handleCardPlay(gameId, user, card) {
                   game.teams[1].booksCount = game.teams[1].booksCount + 4;
                   game.renegeText = `${user} has reneged and\n lost 4 books for their team!`;
                 }
-                console.log(
-                  "this is it",
-                  game.teams[0].player1,
-                  game.renegeText
-                );
                 break;
               }
               case game.teams[0].player2: {
@@ -655,11 +643,6 @@ async function handleCardPlay(gameId, user, card) {
                   game.teams[0].booksCount = game.teams[0].booksCount + 4;
                   game.renegeText = `${user} has reneged and\n lost 4 books for their team!`;
                 }
-                console.log(
-                  "this is it",
-                  game.teams[1].player1,
-                  game.renegeText
-                );
                 break;
               }
               case game.teams[1].player2: {
@@ -668,17 +651,10 @@ async function handleCardPlay(gameId, user, card) {
                   game.currentSuit
                 );
                 if (handContainsSuit) {
-                  console.log();
                   game.teams[1].booksCount = game.teams[1].booksCount - 4;
                   game.teams[0].booksCount = game.teams[0].booksCount + 4;
                   game.renegeText = `${user} has reneged and\n lost 4 books for their team!`;
                 }
-                console.log(
-                  "this is it",
-                  handContainsSuit,
-                  game.teams[1].player2,
-                  game.teams[0].booksCount
-                );
                 break;
               }
               default:
@@ -687,6 +663,7 @@ async function handleCardPlay(gameId, user, card) {
           }
           const idx = game.turnOrder.indexOf(user);
           game.currentTurn = game.turnOrder[idx === 3 ? 0 : idx + 1];
+          console.log('numbcardsonfield',game.cardsOnField.length)
           if (game.cardsOnField.length === 4) {
             let currentSuit = game.currentSuit;
             let index = 0;
@@ -752,6 +729,7 @@ async function handleCardPlay(gameId, user, card) {
             game.roundWinner = winner;
             game.turnWinner = winner;
             game.jokerSuit = false;
+            game.currentTurn = "";
             game.currentSuit = "";
             game.turnsCount++;
           }
@@ -795,15 +773,18 @@ function _containsSuit(hand, suit) {
 }
 
 async function endTrick(gameId){
+  console.log('end tricks',gameId);
   const db = getDatabase();
-  console.log(gameId)
   const gameRef = ref(db, `/games/${gameId}`);
 
   try {
     await rtRunTransaction(gameRef, (game) => {
+      console.log("huh?");
       if(game){
-        let winnerIndex = game.turnOrder.indexOf(game.roundWinner);
+        let winnerIndex = game.turnOrder.indexOf(game.turnWinner);
         let turnWinner = game.roundWinner;
+        console.log(turnWinner);
+        
         switch (winnerIndex) {
           case 1:
             game.turnOrder = [
@@ -834,7 +815,7 @@ async function endTrick(gameId){
         }
         game.cardsOnField = [];
         game.currentTurn = turnWinner;
-        game.roundWinner="";
+        //game.roundWinner="";
         game.turnWinner="";
 
 
@@ -842,12 +823,14 @@ async function endTrick(gameId){
       return game
     })
   }catch(e){
+    console.log(e);
     return {error:e.message};
   }
   return {success:true}
 }
 
 async function calculateScore(gameId){
+  console.log('calculate Score')
   const db = getDatabase();
   console.log(gameId)
   const gameRef = ref(db, `/games/${gameId}`);
@@ -859,7 +842,7 @@ async function calculateScore(gameId){
         _calculateTeamScore(game.teams[1]);
         game.newRoundAcceptCount = 0;
         game.roundFinished = true;
-        game.currentTurn = '';
+        //game.currentTurn = '';
       }
       return game;
     });

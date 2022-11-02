@@ -44,7 +44,6 @@ async function endRound(req, res) {
 }
 async function endTrick(req, res) {
   const {gameId} = req.body;
-  console.log(gameId);
   const result= service.endTrick(gameId);
   res.status(200).json(result)
 }
@@ -89,7 +88,6 @@ async function onCancelMatchmaking(req, res) {
 }
 async function playCard(req, res) {
   const {gameId, user, card}= req.body;
-  console.log('input', gameId, user, card)
   const result = await service.handleCardPlay(gameId, user, card);
   res.status(200).json(result)
 }
