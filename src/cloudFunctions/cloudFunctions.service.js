@@ -572,22 +572,7 @@ async function handleCardPlay(gameId, user, card) {
   const db = getDatabase();
   const gameRef = ref(db, `/games/${gameId}`);
 
-  if(game.teams[0].player1==user){
-    let idx = game.teams[0].player1Cards.indexOf(card);
-    game.teams[0].player1Cards.splice(idx,1);
-  }
-  if(game.teams[0].player2==user){
-    let idx = game.teams[0].player2Cards.indexOf(card);
-    game.teams[0].player2Cards.splice(idx,1);
-  }
-  if(game.teams[1].player1==user){
-    let idx = game.teams[1].player1Cards.indexOf(card);
-    game.teams[1].player1Cards.splice(idx,1);
-  }
-  if(game.teams[1].player2==user){
-    let idx = game.teams[1].player2Cards.indexOf(card);
-    game.teams[1].player2Cards.splice(idx,1);
-  }
+  
 
   try {
     await rtRunTransaction(gameRef, (game) => {
@@ -608,7 +593,22 @@ async function handleCardPlay(gameId, user, card) {
         } else {
           game.cardsPlayed = [card];
         }
-
+        if(game.teams[0].player1==user){
+          let idx = game.teams[0].player1Cards.indexOf(card);
+          game.teams[0].player1Cards.splice(idx,1);
+        }
+        if(game.teams[0].player2==user){
+          let idx = game.teams[0].player2Cards.indexOf(card);
+          game.teams[0].player2Cards.splice(idx,1);
+        }
+        if(game.teams[1].player1==user){
+          let idx = game.teams[1].player1Cards.indexOf(card);
+          game.teams[1].player1Cards.splice(idx,1);
+        }
+        if(game.teams[1].player2==user){
+          let idx = game.teams[1].player2Cards.indexOf(card);
+          game.teams[1].player2Cards.splice(idx,1);
+        }
         game.currentSuit = _getCardSuit(game.cardsOnField[0]);
         let cardPlayedSuit = _getCardSuit(card);
         game.jokerSuit = game.cardsOnField.some(
