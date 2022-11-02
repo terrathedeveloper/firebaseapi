@@ -768,7 +768,6 @@ async function handleCardPlay(gameId, user, card) {
             game.roundWinner = winner;
             game.turnWinner = winner;
             game.jokerSuit = false;
-            //game.currentTurn = null;
             game.currentSuit = "";
             game.turnsCount++;
           }
