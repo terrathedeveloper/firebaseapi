@@ -388,10 +388,12 @@ async function onMatchStart(team1Id, team2Id, currentUser) {
       await transaction.update(myTeamRef, {
         matchmakingAvailable: false,
         isMatchmaking: false,
+        playersReady:[]
       });
       await transaction.update(otherTeamRef, {
         matchmakingAvailable: false,
         isMatchmaking: false,
+        playersReady:[]
       });
 
       await transaction.delete(myTeamMatchRef);
@@ -493,9 +495,11 @@ async function setPlayerReady(gameLobbyId, user) {
       });
       transaction.update(team1Ref, {
         inMatch: true,
+        playersReady:[]
       });
       transaction.update(team2Ref, {
         inMatch: true,
+        playersReady:[]
       });
     });
     return { success: true };
@@ -764,7 +768,7 @@ async function handleCardPlay(gameId, user, card) {
             game.roundWinner = winner;
             game.turnWinner = winner;
             game.jokerSuit = false;
-            game.currentTurn = null;
+            //game.currentTurn = null;
             game.currentSuit = "";
             game.turnsCount++;
           }
