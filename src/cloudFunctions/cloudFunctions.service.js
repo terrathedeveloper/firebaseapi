@@ -31,7 +31,10 @@ const {
 var admin = require("firebase-admin");
 
 var serviceAccount = require("../../thebigjokerprod-firebase-adminsdk-7o9u8-ab68508be0.json");
-
+const cardsHeirarchy = [
+  "spade_two",  "a",  "k",  "q",  "j",  "ten",  "nine",  "eight",  "seven",  "six",  "five",  "four",
+  "three",  "two",
+];
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -88,11 +91,7 @@ async function createNewUser(userData, phoneNumber) {
   }
 }
 async function createTeam(user, partner) {
-  // const matchmakingRef = db.ref('partners_matchmaking');
-  // await matchmakingRef.child(user).remove()
-  // await matchmakingRef.child(partner).remove()
   try {
-    //const partnersQuery = query(collection(firestore,"partners_matchmaking"));
     await runTransaction(firestore, async (transaction) => {
       const userRef = doc(firestore, "users", user);
       const partnerRef = doc(firestore, "users", partner);
@@ -554,22 +553,7 @@ async function buildGameObj(gameId, user) {
   return { gameId };
 }
 async function handleCardPlay(gameId, user, card) {
-  const cardsHeirarchy = [
-    "spade_two",
-    "a",
-    "k",
-    "q",
-    "j",
-    "ten",
-    "nine",
-    "eight",
-    "seven",
-    "six",
-    "five",
-    "four",
-    "three",
-    "two",
-  ];
+  
   console.log(gameId, user, card);
   //const db = getDatabase(app)
 
