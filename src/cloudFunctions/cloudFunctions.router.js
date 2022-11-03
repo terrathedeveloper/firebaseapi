@@ -11,6 +11,7 @@
 router.route("/addFriend").get(controller.addFriend).all(notAllowed);
 router.route("/endRound").post(controller.endRound).all(notAllowed);
 router.route("/endTrick").post(controller.endTrick).all(notAllowed);
+router.route("/endGame").post(controller.endGame).all(notAllowed);
 router.route("/gameLobbyQuit").get(controller.gameLobbyQuit).all(notAllowed);
 router.route("/getRtcToken").get(controller.getRtcToken).all(notAllowed);
 router.route("/handlePartnersTransaction").post(controller.handlePartnersTransaction).all(notAllowed)

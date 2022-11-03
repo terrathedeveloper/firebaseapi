@@ -20,6 +20,8 @@ const {
   ref,
   set,
   runTransaction: rtRunTransaction,
+  update,
+  onValue
 } = require("firebase/database");
 const {
   getAuth,
@@ -844,7 +846,6 @@ async function calculateScore(gameId){
         _calculateTeamScore(game.teams[1]);
         game.newRoundAcceptCount = 0;
         game.roundFinished = true;
-        //game.currentTurn = '';
       }
       return game;
     });
@@ -872,11 +873,34 @@ function _calculateTeamScore(team){
     team.score = team.score + 200 + extraBooks;
   }
 }
+
+async function endMatch(gameId){
+  console.log('end Game')
+  const db = getDatabase();
+  //const gameRef = ref(db, `/games/${gameId}`);
+  const gameLobbyRef = ref(db, `/games/${gameId}`);
+
+  try {
+    let data = await get(gameLobbyRef);
+    console.log(data);
+    /*await rtRunTransaction(gameLobbyRef, (gameLobby) => {
+      if(game){
+      // console.log(game);
+      }
+      return game;
+    });*/
+  }catch(e){
+    console.log(e);
+    return {error: e.message}  
+  }
+  return {success:true}
+}
 module.exports = {
   buildGameObj,
   createNewUser,
   calculateScore,
   endTrick,
+  endMatch,
   signInUser,
   signOutUser,
   exitPartnerQueue,

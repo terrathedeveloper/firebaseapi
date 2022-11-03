@@ -42,6 +42,11 @@ async function endRound(req, res) {
   const result = service.calculateScore(gameId)
   res.status(200).json(result)
 }
+async function endGame(req, res) {
+  const {gameId} = req.body;
+  const result = service.endMatch(gameId)
+  res.status(200).json(result)
+}
 async function endTrick(req, res) {
   const {gameId} = req.body;
   const result= service.endTrick(gameId);
@@ -162,6 +167,7 @@ module.exports = {
   addFriend,
   endRound,
   endTrick,
+  endGame,
   gameLobbyQuit,
   getRtcToken,
   handlePartnersTransaction,
