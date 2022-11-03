@@ -387,12 +387,14 @@ async function onMatchStart(team1Id, team2Id, currentUser) {
       await transaction.update(myTeamRef, {
         matchmakingAvailable: false,
         isMatchmaking: false,
+        matchmakingWith:null,
         playersReady:[]
       });
       await transaction.update(otherTeamRef, {
         matchmakingAvailable: false,
         isMatchmaking: false,
-        playersReady:[]
+        playersReady:[],
+        matchmakingWith:null
       });
 
       await transaction.delete(myTeamMatchRef);
